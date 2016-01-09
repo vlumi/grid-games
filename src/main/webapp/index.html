@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Start Page</title>
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script language="javascript" type="text/javascript" src="/gomoku-websocket/static/js/gomoku.js"></script>
+        <style type="text/css">
+            #lobby .self {
+                color: red;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Hello World!</h1>
+        <form onsubmit="return false;">
+            <span id="authArea">
+                <span id="loginArea">
+                    <input id="url" type="text" placeholder="url" value="ws://localhost:8080/gomoku-websocket/gomoku">
+                    <input id="name" type="text" placeholder="name">
+                    <input id="password" type="password" placeholder="password">
+                    <input type="submit" id="login" value="Login">
+                </span>
+                <span id="logoutArea">
+                    <input type="submit" id="logout" value="Logout" disabled>
+                </span>
+            </span>
+            <div id="lobbyArea">
+                <div id="lobbyMembersArea">
+                    <select id="lobbyMembers" size="10"></select>
+                </div>
+                <div>
+                    <input type="text" id="lobbyMessage">
+                    <input type="submit" id="sendLobbyMessage" value="Send">
+                </div>
+                <div id="lobby">
+                </div>
+            </div>
+        </form>
+    </body>
+</html>
