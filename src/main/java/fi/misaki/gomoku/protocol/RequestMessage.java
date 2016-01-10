@@ -9,6 +9,7 @@ import fi.misaki.gomoku.protocol.key.MessageType;
 import fi.misaki.gomoku.protocol.key.MessageKey;
 import java.io.StringReader;
 import javax.json.Json;
+import javax.json.JsonException;
 import javax.json.JsonObject;
 
 /**
@@ -16,7 +17,7 @@ import javax.json.JsonObject;
  *
  * @author vlumi
  */
-public class Request extends Message {
+public class RequestMessage extends Message {
 
     private static final long serialVersionUID = -1406513789202879713L;
 
@@ -32,7 +33,7 @@ public class Request extends Message {
      * @param data The request as a JSON string.
      * @throws InvalidRequestException
      */
-    public Request(String data)
+    public RequestMessage(String data)
             throws InvalidRequestException {
         this(parseFromJsonString(data));
     }
@@ -42,7 +43,7 @@ public class Request extends Message {
      *
      * @param data The request as a JSON object.
      */
-    public Request(JsonObject data) {
+    public RequestMessage(JsonObject data) {
         super(MessageType.ofCode(data.getString(MessageKey.TYPE.getCode(), "")));
         this.payload = data.getJsonObject(MessageKey.PAYLOAD.getCode());
     }
@@ -51,10 +52,16 @@ public class Request extends Message {
         return payload;
     }
 
-    private static JsonObject parseFromJsonString(String data) {
-        return Json
-                .createReader(new StringReader(data))
-                .readObject();
+    private static JsonObject parseFromJsonString(String data)
+            throws InvalidRequestException {
+        try {
+            return Json
+                    .createReader(new StringReader(data))
+                    .readObject();
+        } catch (JsonException e) {
+            throw new InvalidRequestException("Invalid request.");
+
+        }
     }
 
 }

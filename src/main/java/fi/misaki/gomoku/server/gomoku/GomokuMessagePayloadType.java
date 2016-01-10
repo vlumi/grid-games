@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fi.misaki.gomoku.protocol.key;
+package fi.misaki.gomoku.server.gomoku;
 
 import java.util.Arrays;
 
@@ -11,17 +11,18 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum ResponseKey {
-    ERROR("error"),
-    MESSAGE("message"),
+public enum GomokuMessagePayloadType {
+    STATE("state"),
+    JOIN(""),
+    CHALLENGE("challenge"),
+    ACCEPT("accept"),
+    REJECT("reject"),
+    MOVE("move"),
     UNKNOWN("");
 
-    private String code;
+    private final String code;
 
-    private ResponseKey() {
-    }
-
-    private ResponseKey(String code) {
+    private GomokuMessagePayloadType(String code) {
         this.code = code;
     }
 
@@ -29,12 +30,13 @@ public enum ResponseKey {
         return code;
     }
 
-    public static ResponseKey ofCode(String code) {
-        return Arrays.asList(ResponseKey.values())
+    public static GomokuMessagePayloadType ofCode(String code) {
+        return Arrays.asList(GomokuMessagePayloadType.values())
                 .stream()
                 .filter(o -> o.getCode().equals(code))
                 .findAny()
                 .orElse(UNKNOWN);
 
     }
+
 }

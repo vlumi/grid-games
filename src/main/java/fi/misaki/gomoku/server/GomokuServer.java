@@ -5,9 +5,10 @@
  */
 package fi.misaki.gomoku.server;
 
-import fi.misaki.gomoku.server.auth.UserManager;
-import fi.misaki.gomoku.server.auth.User;
-import fi.misaki.gomoku.protocol.Response;
+import fi.misaki.gomoku.protocol.ErrorMessage;
+import fi.misaki.gomoku.protocol.InvalidRequestException;
+import fi.misaki.gomoku.server.user.UserManager;
+import fi.misaki.gomoku.server.user.User;
 import fi.misaki.gomoku.server.lobby.LobbyManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,12 +54,21 @@ public class GomokuServer {
     public String onMessage(String message, Session session) {
         LOGGER.log(Level.FINEST, "[{0}] MSG {1}", new String[]{session.getId(), message});
 
-        Response response = this.requestHandler.handleRequest(message, session);
+        try {
+            this.requestHandler.handleRequest(message, session);
 
-        if (response.isError() || response.getPayload() != null) {
-            return response.toJsonObject().toString();
+        } catch (Exception ex) {
+            LOGGER.log(Level.INFO, null, ex);
+            ErrorMessage errorMessage;
+            if (ex instanceof InvalidRequestException) {
+                errorMessage = new ErrorMessage(ex.getMessage());
+            } else {
+                errorMessage = new ErrorMessage("Unknown error.");
+            }
+            return errorMessage.toJsonObject().toString();
         }
-        return "";
+
+        return null;
     }
 
     /**
@@ -69,9 +79,9 @@ public class GomokuServer {
     public void onClose(Session session) {
         LOGGER.log(Level.FINEST, "[{0}] CLOSE", session.getId());
 
-        User user = userManager.getUserForSession(session.getId());
+        User user = userManager.getUserForSessionId(session.getId());
         userManager.endSession(session);
-        if (user.getSessions().isEmpty()) {
+        if (user != null && user.getSessions().isEmpty()) {
             // No more open sessions for the user.
             lobbyManager.sendPartMessage(user);
         }

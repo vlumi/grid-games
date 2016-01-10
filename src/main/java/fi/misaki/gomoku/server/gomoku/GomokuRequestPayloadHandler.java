@@ -7,8 +7,9 @@ package fi.misaki.gomoku.server.gomoku;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.server.RequestPayloadHandler;
-import fi.misaki.gomoku.server.auth.User;
-import fi.misaki.gomoku.server.auth.UserManager;
+import fi.misaki.gomoku.server.user.User;
+import fi.misaki.gomoku.server.user.UserManager;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -21,31 +22,31 @@ import javax.websocket.Session;
  * @author vlumi
  */
 @Stateless
-public class GomokuRequestHandler extends RequestPayloadHandler {
+public class GomokuRequestPayloadHandler extends RequestPayloadHandler {
 
     private static final long serialVersionUID = 7531558038666358138L;
+
+    private static final Logger LOGGER = Logger.getLogger(GomokuRequestPayloadHandler.class.getName());
 
     @Inject
     private UserManager userManager;
 
     /**
-     * 
+     *
      * @param session
      * @param payload
-     * @return
-     * @throws InvalidRequestException 
+     * @throws InvalidRequestException
      */
     @Override
-    public JsonObjectBuilder handleRequestPayload(Session session, JsonObject payload) throws InvalidRequestException {
+    public void handleRequestPayload(Session session, JsonObject payload) throws InvalidRequestException {
 
-        User user = userManager.getUserForSession(session.getId());
+        User user = userManager.getUserForSessionId(session.getId());
 
         // TODO: parse the input
         // TODO: take action, based on input
         JsonObjectBuilder responsePayload = Json.createBuilderFactory(null)
                 .createObjectBuilder();
 
-        return responsePayload;
     }
 
 }

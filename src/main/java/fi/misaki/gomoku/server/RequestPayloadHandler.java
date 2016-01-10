@@ -8,7 +8,6 @@ package fi.misaki.gomoku.server;
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import java.io.Serializable;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.websocket.Session;
 
 /**
@@ -23,10 +22,9 @@ public abstract class RequestPayloadHandler implements Serializable {
      *
      * @param session
      * @param payload
-     * @return
      * @throws fi.misaki.gomoku.protocol.InvalidRequestException
      */
-    public abstract JsonObjectBuilder handleRequestPayload(Session session, JsonObject payload)
+    public abstract void handleRequestPayload(Session session, JsonObject payload)
             throws InvalidRequestException;
 
 }

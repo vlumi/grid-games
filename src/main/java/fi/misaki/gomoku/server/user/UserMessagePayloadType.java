@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.user;
 
 import java.util.Arrays;
 
@@ -11,14 +11,13 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum GomokuMessageType {
-
-    STATE("state"),
+public enum UserMessagePayloadType {
+    LOGIN("login"),
     UNKNOWN("");
 
     private final String code;
 
-    private GomokuMessageType(String code) {
+    private UserMessagePayloadType(String code) {
         this.code = code;
     }
 
@@ -26,8 +25,8 @@ public enum GomokuMessageType {
         return code;
     }
 
-    public static GomokuMessageType ofCode(String code) {
-        return Arrays.asList(GomokuMessageType.values())
+    public static UserMessagePayloadType ofCode(String code) {
+        return Arrays.asList(UserMessagePayloadType.values())
                 .stream()
                 .filter(o -> o.getCode().equals(code))
                 .findAny()

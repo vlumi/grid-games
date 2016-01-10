@@ -11,17 +11,16 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum MessageType {
-
-    ERROR("error"),
-    USER("user"),
-    LOBBY("lobby"),
-    GOMOKU("gomoku"),
+public enum ErrorMessageKey {
+    TEXT("text"),
     UNKNOWN("");
 
-    private final String code;
+    private String code;
 
-    private MessageType(String code) {
+    private ErrorMessageKey() {
+    }
+
+    private ErrorMessageKey(String code) {
         this.code = code;
     }
 
@@ -29,13 +28,12 @@ public enum MessageType {
         return code;
     }
 
-    public static MessageType ofCode(String code) {
-        return Arrays.asList(MessageType.values())
+    public static ErrorMessageKey ofCode(String code) {
+        return Arrays.asList(ErrorMessageKey.values())
                 .stream()
                 .filter(o -> o.getCode().equals(code))
                 .findAny()
                 .orElse(UNKNOWN);
 
     }
-
 }

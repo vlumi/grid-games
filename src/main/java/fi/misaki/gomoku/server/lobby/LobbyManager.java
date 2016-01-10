@@ -8,15 +8,13 @@ package fi.misaki.gomoku.server.lobby;
 import fi.misaki.gomoku.protocol.Message;
 import fi.misaki.gomoku.protocol.key.MessageType;
 import fi.misaki.gomoku.protocol.PushMessage;
-import fi.misaki.gomoku.server.RequestHandler;
-import fi.misaki.gomoku.server.auth.User;
-import fi.misaki.gomoku.server.auth.UserManager;
+import fi.misaki.gomoku.server.user.User;
+import fi.misaki.gomoku.server.user.UserManager;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.json.Json;
 
 /**
  *
@@ -27,10 +25,21 @@ public class LobbyManager implements Serializable {
 
     private static final long serialVersionUID = 3409124989853945066L;
 
-    private static final Logger LOGGER = Logger.getLogger(RequestHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(LobbyManager.class.getName());
 
     @Inject
     private UserManager userManager;
+
+    /**
+     *
+     * @param user
+     */
+    public void sendInitMessage(User user) {
+        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.INIT);
+        message.getPayload()
+                .add("members", this.userManager.getMembersAsJsonArrayBuilder());
+        userManager.sendMessageToUser(user, message);
+    }
 
     /**
      * Send a join message to all open sessions.
@@ -38,7 +47,7 @@ public class LobbyManager implements Serializable {
      * @param user The user who joined.
      */
     public void sendJoinMessage(User user) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageType.JOIN);
+        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.JOIN);
         message.getPayload()
                 .add("name", user.getName());
 
@@ -52,7 +61,7 @@ public class LobbyManager implements Serializable {
      * @param user The user who left.
      */
     public void sendPartMessage(User user) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageType.PART);
+        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.PART);
         message.getPayload()
                 .add("name", user.getName());
 
@@ -65,8 +74,8 @@ public class LobbyManager implements Serializable {
      * @param user
      * @param messageText
      */
-    public void sendMessage(User user, String messageText) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageType.MESSAGE);
+    public void sendMessageToAll(User user, String messageText) {
+        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.MESSAGE);
         message.getPayload()
                 .add("from", user.getName())
                 .add("message", messageText);
@@ -80,13 +89,10 @@ public class LobbyManager implements Serializable {
      * @param type
      * @return
      */
-    private PushMessage createPushMessageTemplate(LobbyMessageType type) {
-        PushMessage message = new PushMessage();
-        message.setType(MessageType.LOBBY);
-        message.setPayload(Json.createBuilderFactory(null)
-                .createObjectBuilder()
-                .add("type", type.getCode())
-        );
+    private PushMessage createPushMessageTemplate(LobbyMessagePayloadType type) {
+        PushMessage message = new PushMessage(MessageType.LOBBY);
+        message.getPayload()
+                .add("type", type.getCode());
         return message;
     }
 

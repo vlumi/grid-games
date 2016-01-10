@@ -25,7 +25,7 @@ public class Message implements Serializable {
     /**
      * The type of the message, as defined in the enum MessageType.
      */
-    private MessageType type;
+    private final MessageType type;
 
     public Message() {
         this.type = MessageType.UNKNOWN;
@@ -41,10 +41,6 @@ public class Message implements Serializable {
 
     public MessageType getType() {
         return type;
-    }
-
-    public void setType(MessageType type) {
-        this.type = type;
     }
 
     protected JsonObjectBuilder toJsonObjectTemplate() {

@@ -9,7 +9,7 @@
                     }
                 };
             })(),
-            auth = (function () {
+            user = (function () {
                 var self = {
                     enableLogin: function () {
                         $("#loginArea input").prop("disabled", false);
@@ -18,11 +18,6 @@
                     disableLogin: function () {
                         $("#loginArea input").prop("disabled", true);
                         $("#logoutArea input").prop("disabled", false);
-                    }
-                };
-                return {
-                    session: {
-                        name: ""
                     },
                     login: function () {
                         var
@@ -34,15 +29,25 @@
                         self.disableLogin();
                     },
                     logout: function () {
-                        auth.session.name = "";
+                        user.session.name = "";
                         websocket.disconnect();
                         lobby.close();
                         self.enableLogin();
                     },
-                    onMessage: function (payload) {
-                        $("#name").val(payload.name);
-                        auth.session.name = payload.name;
-                        lobby.init(payload.members);
+                };
+                return {
+                    session: {
+                        name: ""
+                    },
+                    logout: self.logout,
+                    onMessagePayload: function (payload) {
+                        switch (payload.type) {
+                            // TODO: implement
+                            case "login":
+                                $("#name").val(payload.name);
+                                user.session.name = payload.name;
+                                break;
+                        }
                     },
                     onError: function (message) {
                         alert("Login failed: " + message.message);
@@ -51,11 +56,11 @@
                     init: function () {
                         $(document)
                                 .on("click.login", "#login", function () {
-                                    auth.login();
+                                    self.login();
                                     return false;
                                 })
                                 .on("click.logout", "#logout", function () {
-                                    auth.logout();
+                                    user.logout();
                                     return false;
                                 });
                     }
@@ -82,7 +87,7 @@
                             var $option = $("<option>")
                                     .text(name)
                                     .val(name);
-                            if (name === auth.session.name) {
+                            if (name === user.session.name) {
                                 $option.prop("disabled", true);
                             }
                             $lobbyMembers
@@ -101,23 +106,15 @@
                     }
                 };
                 return {
-                    onMessage: function (payload) {
+                    onMessagePayload: function (payload) {
                         var $message;
 
                         switch (payload.type) {
-                            case "message":
-                                if (payload.from === undefined) {
-                                    $message = $("<div>").text(payload.message);
-                                } else if (payload.from === auth.session.name) {
-                                    $message = $("<div>")
-                                            .text(payload.from + ": " + payload.message)
-                                            .addClass("self");
-                                } else {
-                                    $message = $("<div>").text(payload.from + ": " + payload.message);
-                                }
+                            case "init":
+                                lobby.init(payload.members);
                                 break;
                             case "join":
-                                if (self.active) {
+                                if (self.active && payload.name !== user.session.name) {
                                     $message = $("<div>").text("*** " + payload.name + " has joined.");
                                     self.addMemberToList(payload.name);
                                 }
@@ -125,6 +122,17 @@
                             case "part":
                                 $message = $("<div>").text("*** " + payload.name + " has left.");
                                 $("#lobbyMembers option[value=" + payload.name + "]").remove();
+                                break;
+                            case "message":
+                                if (payload.from === undefined) {
+                                    $message = $("<div>").text(payload.message);
+                                } else if (payload.from === user.session.name) {
+                                    $message = $("<div>")
+                                            .text(payload.from + ": " + payload.message)
+                                            .addClass("self");
+                                } else {
+                                    $message = $("<div>").text(payload.from + ": " + payload.message);
+                                }
                                 break;
                         }
                         $("#lobby").append($message);
@@ -159,37 +167,69 @@
                     }
                 };
             })(),
+            gomoku = (function () {
+                var self = {
+                    active: false
+                };
+                return {
+                    onMessagePayload: function (payload) {
+                        switch (payload.type) {
+                            // TODO: implement
+                        }
+                    },
+                    init: function (members) {
+                        // TODO: implement
+                        self.active = true;
+                    },
+                    close: function () {
+                        if (!self.active) {
+                            return;
+                        }
+                        // TODO: implement
+                        self.active = false;
+                    }
+                };
+            }),
             websocket = (function () {
                 var self = {
                     event: {
                         onMessage: function (evt) {
-                            var msg = $.parseJSON(evt.data);
-                            console.log("Message is received... " + msg);
+                            var message = $.parseJSON(evt.data);
+                            console.log("Received message: " + message);
 
-                            if (msg.error) {
-                                if (msg.type in self.event.error) {
-                                    self.event.error[msg.type](msg);
-                                } else {
-                                    alert("Received error: " + msg.message);
-                                }
-                            } else if (msg.type in self.event.payload) {
-                                self.event.payload[msg.type](msg.payload);
+                            if (message.type in self.handler.message) {
+                                self.handler.message[message.type](message);
+                            } else if (message.type in self.handler.payload) {
+                                self.handler.payload[message.type](message.payload);
                             }
                         },
                         onClose: function () {
                             // websocket is closed.
-                            console.log("Connection is closed...");
-                            auth.logout();
+                            console.log("Connection closed.");
+                            user.logout();
+                        }
+                    },
+                    handler: {
+                        message: {
+                            error: function (message) {
+                                if (message.type in self.handler.error) {
+                                    self.handler.error[message.type](message);
+                                } else {
+                                    // TODO: framework
+                                    alert("Received error: " + message.text);
+                                }
+                                user.logout();
+                            }
                         },
                         payload: {
-                            auth: auth.onMessage,
-                            lobby: lobby.onMessage,
+                            user: user.onMessagePayload,
+                            lobby: lobby.onMessagePayload,
                             gameGomoku: function (payload) {
 
                             }
                         },
                         error: {
-                            auth: auth.onError
+                            user: user.onError
                         }
                     }
                 };
@@ -201,7 +241,7 @@
                         webSocket = new WebSocket(url);
                         webSocket.onopen = function () {
                             // Web Socket is connected, send data using send()
-                            websocket.send("auth", {
+                            websocket.send("user", {
                                 "type": "login",
                                 "name": name,
                                 "password": password
@@ -227,7 +267,7 @@
                 };
             })(),
             init = function () {
-                auth.init();
+                user.init();
             };
 
 

@@ -3,10 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fi.misaki.gomoku.server.auth;
+package fi.misaki.gomoku.server.user;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
-import fi.misaki.gomoku.server.GomokuServer;
+import fi.misaki.gomoku.protocol.Message;
+import fi.misaki.gomoku.protocol.PushMessage;
+import fi.misaki.gomoku.protocol.key.MessageType;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,6 +19,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.websocket.Session;
 
 /**
@@ -28,7 +32,7 @@ public class UserManager implements Serializable {
 
     private static final long serialVersionUID = 6647461122604969208L;
 
-    private static final Logger LOGGER = Logger.getLogger(GomokuServer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(UserManager.class.getName());
 
     /**
      *
@@ -46,22 +50,32 @@ public class UserManager implements Serializable {
      * @param sessionId
      * @return
      */
-    public User getUserForSession(String sessionId) {
+    public User getUserForSessionId(String sessionId) {
         User user = this.usersBySessionId.get(sessionId);
         if (user == null) {
-            user = new User();
-            this.usersBySessionId.put(sessionId, user);
+            // TODO: error
+            return null;
         }
         return user;
     }
 
     /**
+     * Attempt to start as session for the given user.
      *
-     * @param name
-     * @param passwordHash
-     * @param session
-     * @return
-     * @throws InvalidRequestException
+     * If the name is not given, creates an anonymous session.
+     *
+     * If the name is given, and the user already exists, the password must not
+     * be empty and must match the password used to create the user's previous
+     * sessions.
+     *
+     * @param name Name of the user, or an empty string for anonymous.
+     * @param passwordHash Hashed password for the user to allow multiple
+     * connections for the user.
+     * @param session The websocket session that requested the session to be
+     * started.
+     * @return The user connected to the session; may be a new or an existing
+     * user.
+     * @throws InvalidRequestException In case of any errors.
      */
     public User startSession(String name, String passwordHash, Session session)
             throws InvalidRequestException {
@@ -93,6 +107,7 @@ public class UserManager implements Serializable {
     }
 
     /**
+     * Create an anonymous user, by a unique name.
      *
      * @return
      */
@@ -100,11 +115,17 @@ public class UserManager implements Serializable {
         User user = new User();
         user.setName("anon#" + this.anonymousCounter.getAndAdd(1));
         LOGGER.log(Level.FINEST, "Anonymouse user: {0}", user.getName());
-        this.usersByName.put(user.getName(), user);
+        synchronized (this.usersByName) {
+            this.usersByName.put(user.getName(), user);
+        }
         return user;
     }
 
     /**
+     * Ends the session, removing all references to it.
+     *
+     * If it was the last session of the user, do special handling to mark the
+     * user offline.
      *
      * @param session
      */
@@ -112,28 +133,43 @@ public class UserManager implements Serializable {
         User user = this.usersBySessionId.remove(session.getId());
         if (user != null) {
             user.removeSession(session);
-            if (user.getSessions().isEmpty() && user.getPasswordHash().isEmpty()) {
-                this.usersByName.remove(user.getName());
+            if (user.getSessions().isEmpty() || user.getPasswordHash().isEmpty()) {
+                // TODO: add hooks for other handlers
+                synchronized (this.usersByName) {
+                    this.usersByName.remove(user.getName());
+                }
             }
         }
     }
 
     /**
+     * Get a set of all members' names.
      *
-     * @param name
      * @return
      */
-    public boolean isNameTaken(String name) {
-        return this.usersByName.containsKey(name);
-    }
-
     public Set<String> getMembers() {
-        return this.usersByName.keySet();
+        synchronized (this.usersByName) {
+            return this.usersByName.keySet();
+        }
     }
 
     /**
+     * Get a list of all members' names, as a JsonArrayBuilder object.
      *
      * @return
+     */
+    public JsonArrayBuilder getMembersAsJsonArrayBuilder() {
+        JsonArrayBuilder membersBuilder = Json.createBuilderFactory(null)
+                .createArrayBuilder();
+        this.getMembers().forEach(member -> membersBuilder.add(member));
+
+        return membersBuilder;
+    }
+
+    /**
+     * Get all currently active sessions across all users.
+     *
+     * @return A set of all active sessions.
      */
     public Set<Session> getAllSessions() {
         Set<Session> allSessions = new HashSet<>();
@@ -143,6 +179,36 @@ public class UserManager implements Serializable {
                     .forEach(user -> allSessions.addAll(user.getSessions()));
         }
         return allSessions;
+    }
+
+    /**
+     * Send the post-login message to the user.
+     *
+     * @param user Target user.
+     */
+    public void sendPostLoginMessage(User user) {
+        PushMessage loginMessage = new PushMessage(MessageType.USER);
+        loginMessage.getPayload()
+                .add("type", UserMessagePayloadType.LOGIN.getCode())
+                .add("name", user.getName());
+        this.sendMessageToUser(user, loginMessage);
+    }
+
+    /**
+     * Sends a message to a user.
+     *
+     * @param user Target user.
+     * @param message Message to send.
+     */
+    public void sendMessageToUser(User user, Message message) {
+        String messageString = message.toJsonObject().toString();
+        LOGGER.log(Level.FINEST, "Send message to user {0}: {1}", new String[]{user.getName(), messageString});
+
+        user.getSessions().forEach(session -> {
+            LOGGER.log(Level.FINEST, " - Send to session: {0}", session.getId());
+            session.getAsyncRemote().sendText(messageString);
+        });
+
     }
 
 }

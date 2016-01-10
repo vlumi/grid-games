@@ -11,8 +11,8 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum LobbyMessageType {
-
+public enum LobbyMessagePayloadType {
+    INIT("init"),
     JOIN("join"),
     PART("part"),
     MESSAGE("message"),
@@ -20,7 +20,7 @@ public enum LobbyMessageType {
 
     private final String code;
 
-    private LobbyMessageType(String code) {
+    private LobbyMessagePayloadType(String code) {
         this.code = code;
     }
 
@@ -28,8 +28,8 @@ public enum LobbyMessageType {
         return code;
     }
 
-    public static LobbyMessageType ofCode(String code) {
-        return Arrays.asList(LobbyMessageType.values())
+    public static LobbyMessagePayloadType ofCode(String code) {
+        return Arrays.asList(LobbyMessagePayloadType.values())
                 .stream()
                 .filter(o -> o.getCode().equals(code))
                 .findAny()

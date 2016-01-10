@@ -5,17 +5,15 @@
  */
 package fi.misaki.gomoku.server;
 
-import fi.misaki.gomoku.server.auth.AuthRequestHandler;
+import fi.misaki.gomoku.server.user.UserRequestPayloadHandler;
 import fi.misaki.gomoku.protocol.InvalidRequestException;
-import fi.misaki.gomoku.protocol.Request;
-import fi.misaki.gomoku.protocol.Response;
-import fi.misaki.gomoku.server.gomoku.GomokuRequestHandler;
-import fi.misaki.gomoku.server.lobby.LobbyRequestHandler;
-import java.util.logging.Level;
+import fi.misaki.gomoku.protocol.RequestMessage;
+import fi.misaki.gomoku.server.gomoku.GomokuRequestPayloadHandler;
+import fi.misaki.gomoku.server.lobby.LobbyRequestPayloadHandler;
+import java.io.Serializable;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.json.JsonException;
 import javax.websocket.Session;
 
 /**
@@ -25,59 +23,44 @@ import javax.websocket.Session;
  * @author vlumi
  */
 @Stateless
-public class RequestHandler {
+public class RequestHandler implements Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(RequestHandler.class.getName());
+    private static final long serialVersionUID = 1241174184175430192L;
 
     @Inject
-    private AuthRequestHandler authRequestHandler;
+    private UserRequestPayloadHandler authRequestHandler;
     @Inject
-    private LobbyRequestHandler lobbyRequestHandler;
+    private LobbyRequestPayloadHandler lobbyRequestHandler;
     @Inject
-    private GomokuRequestHandler gomokuRequestHandler;
+    private GomokuRequestPayloadHandler gomokuRequestHandler;
 
     /**
      *
      * @param message
      * @param session
-     * @return
+     * @throws fi.misaki.gomoku.protocol.InvalidRequestException
      */
-    public Response handleRequest(String message, Session session) {
+    public void handleRequest(String message, Session session)
+            throws InvalidRequestException {
 
-        Response response = new Response();
-        try {
-            Request request = new Request(message);
-            response.setType(request.getType());
+        RequestMessage request = new RequestMessage(message);
 
-            RequestPayloadHandler handler;
-            switch (request.getType()) {
-                case AUTH:
-                    handler = this.authRequestHandler;
-                    break;
-                case LOBBY:
-                    handler = this.lobbyRequestHandler;
-                    break;
-                case GOMOKU:
-                    handler = this.gomokuRequestHandler;
-                    break;
-                default:
-                    throw new InvalidRequestException("Invalid request type.");
-            }
-            response.setPayload(handler.handleRequestPayload(session, request.getPayload()));
-
-        } catch (Exception ex) {
-            LOGGER.log(Level.INFO, null, ex);
-            response.setError(true);
-            if (ex instanceof InvalidRequestException) {
-                response.setMessage(ex.getMessage());
-            } else if (ex instanceof JsonException) {
-                response.setMessage("Invalid request.");
-            } else {
-                response.setMessage("Unknown error.");
-            }
+        RequestPayloadHandler handler;
+        switch (request.getType()) {
+            case USER:
+                handler = this.authRequestHandler;
+                break;
+            case LOBBY:
+                handler = this.lobbyRequestHandler;
+                break;
+            case GOMOKU:
+                handler = this.gomokuRequestHandler;
+                break;
+            default:
+                throw new InvalidRequestException("Invalid request type.");
         }
-
-        return response;
+        handler.handleRequestPayload(session, request.getPayload());
     }
 
 }
