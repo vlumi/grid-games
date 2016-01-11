@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.misaki.gomoku.server.user;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
@@ -188,8 +183,8 @@ public class UserManager implements Serializable {
      */
     public void sendPostLoginMessage(User user) {
         PushMessage loginMessage = new PushMessage(MessageType.USER);
-        loginMessage.getPayload()
-                .add("type", UserMessagePayloadType.LOGIN.getCode())
+        loginMessage.getData()
+                .add("type", UserMessageDataType.LOGIN.getCode())
                 .add("name", user.getName());
         this.sendMessageToUser(user, loginMessage);
     }

@@ -1,4 +1,4 @@
-package fi.misaki.gomoku.protocol.key;
+package fi.misaki.gomoku.server.user;
 
 import java.util.Arrays;
 
@@ -6,17 +6,13 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum MessageType {
-
-    ERROR("error"),
-    USER("user"),
-    LOBBY("lobby"),
-    GOMOKU("gomoku"),
+public enum UserMessageDataType {
+    LOGIN("login"),
     UNKNOWN("");
 
     private final String code;
 
-    private MessageType(String code) {
+    private UserMessageDataType(String code) {
         this.code = code;
     }
 
@@ -24,8 +20,8 @@ public enum MessageType {
         return code;
     }
 
-    public static MessageType ofCode(String code) {
-        return Arrays.asList(MessageType.values())
+    public static UserMessageDataType ofCode(String code) {
+        return Arrays.asList(UserMessageDataType.values())
                 .stream()
                 .filter(value -> value.getCode().equals(code))
                 .findAny()

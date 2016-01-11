@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.misaki.gomoku.protocol;
 
 import fi.misaki.gomoku.protocol.key.MessageType;
@@ -24,27 +19,27 @@ public class PushMessage extends Message {
     }
 
     /**
-     * Message payload, the exact content depending on the message type.
+     * Message data, the exact content depending on the message type.
      */
-    private final JsonObjectBuilder payload = Json.createBuilderFactory(null)
+    private final JsonObjectBuilder data = Json.createBuilderFactory(null)
             .createObjectBuilder();
 
-    public JsonObjectBuilder getPayload() {
-        return payload;
+    public JsonObjectBuilder getData() {
+        return data;
     }
 
     @Override
     protected JsonObjectBuilder toJsonObjectTemplate() {
-        if (this.payload != null) {
+        if (this.data != null) {
             return super.toJsonObjectTemplate()
-                    .add(PushMessageKey.PAYLOAD.getCode(), this.payload);
+                    .add(PushMessageKey.DATA.getCode(), this.data);
         }
         return super.toJsonObjectTemplate();
     }
 
     @Override
     public String toString() {
-        return "PushMessage{" + "payload=" + payload + "} < " + super.toString();
+        return "PushMessage{" + "data=" + data + "} < " + super.toString();
     }
 
 }

@@ -1,22 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.misaki.gomoku.server.user;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
-import fi.misaki.gomoku.protocol.PushMessage;
-import fi.misaki.gomoku.protocol.key.MessageType;
-import fi.misaki.gomoku.server.RequestPayloadHandler;
+import fi.misaki.gomoku.server.RequestDataHandler;
 import fi.misaki.gomoku.server.lobby.LobbyManager;
-import java.math.BigDecimal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.websocket.Session;
 
@@ -25,11 +15,11 @@ import javax.websocket.Session;
  * @author vlumi
  */
 @Stateless
-public class UserRequestPayloadHandler extends RequestPayloadHandler {
+public class UserRequestDataHandler extends RequestDataHandler {
 
     private static final long serialVersionUID = 8272657796866836750L;
 
-    private static final Logger LOGGER = Logger.getLogger(UserRequestPayloadHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(UserRequestDataHandler.class.getName());
 
     @Inject
     private UserManager userManager;
@@ -39,13 +29,13 @@ public class UserRequestPayloadHandler extends RequestPayloadHandler {
     /**
      *
      * @param session
-     * @param payload
+     * @param data
      * @throws InvalidRequestException
      */
     @Override
-    public void handleRequestPayload(Session session, JsonObject payload)
+    public void handleRequestData(Session session, JsonObject data)
             throws InvalidRequestException {
-        User user = loginUser(session, payload);
+        User user = loginUser(session, data);
         LOGGER.log(Level.FINE, "User joined: {0}", user.getName());
 
         userManager.sendPostLoginMessage(user);
@@ -63,12 +53,12 @@ public class UserRequestPayloadHandler extends RequestPayloadHandler {
      * @param session
      * @throws InvalidRequestException
      */
-    private User loginUser(Session session, JsonObject payload)
+    private User loginUser(Session session, JsonObject data)
             throws InvalidRequestException {
 
         // TODO: hash the password
-        String name = payload.getString("name", "");
-        String password = payload.getString("password", "");
+        String name = data.getString("name", "");
+        String password = data.getString("password", "");
         return userManager.startSession(name, password, session);
     }
 

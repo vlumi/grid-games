@@ -1,7 +1,5 @@
 (function ($) {
-
     var
-            webSocket,
             util = (function () {
                 return {
                     caseInsensitiveSort: function (a, b) {
@@ -25,7 +23,14 @@
                                 name = $("#name").val(),
                                 password = $("#password").val();
 
-                        websocket.connect(url, name, password);
+                        var callback = function () {
+                            websocket.send("user", {
+                                "type": "login",
+                                "name": name,
+                                "password": password
+                            });
+                        };
+                        websocket.connect(url, callback);
                         self.disableLogin();
                     },
                     logout: function () {
@@ -40,12 +45,12 @@
                         name: ""
                     },
                     logout: self.logout,
-                    onMessagePayload: function (payload) {
-                        switch (payload.type) {
+                    onMessageData: function (data) {
+                        switch (data.type) {
                             // TODO: implement
                             case "login":
-                                $("#name").val(payload.name);
-                                user.session.name = payload.name;
+                                $("#name").val(data.name);
+                                user.session.name = data.name;
                                 break;
                         }
                     },
@@ -106,32 +111,32 @@
                     }
                 };
                 return {
-                    onMessagePayload: function (payload) {
+                    onMessageData: function (data) {
                         var $message;
 
-                        switch (payload.type) {
+                        switch (data.type) {
                             case "init":
-                                lobby.init(payload.members);
+                                lobby.init(data.members);
                                 break;
                             case "join":
-                                if (self.active && payload.name !== user.session.name) {
-                                    $message = $("<div>").text("*** " + payload.name + " has joined.");
-                                    self.addMemberToList(payload.name);
+                                if (self.active && data.name !== user.session.name) {
+                                    $message = $("<div>").text("*** " + data.name + " has joined.");
+                                    self.addMemberToList(data.name);
                                 }
                                 break;
                             case "part":
-                                $message = $("<div>").text("*** " + payload.name + " has left.");
-                                $("#lobbyMembers option[value=" + payload.name + "]").remove();
+                                $message = $("<div>").text("*** " + data.name + " has left.");
+                                $("#lobbyMembers option[value=" + data.name + "]").remove();
                                 break;
                             case "message":
-                                if (payload.from === undefined) {
-                                    $message = $("<div>").text(payload.message);
-                                } else if (payload.from === user.session.name) {
+                                if (data.from === undefined) {
+                                    $message = $("<div>").text(data.message);
+                                } else if (data.from === user.session.name) {
                                     $message = $("<div>")
-                                            .text(payload.from + ": " + payload.message)
+                                            .text(data.from + ": " + data.message)
                                             .addClass("self");
                                 } else {
-                                    $message = $("<div>").text(payload.from + ": " + payload.message);
+                                    $message = $("<div>").text(data.from + ": " + data.message);
                                 }
                                 break;
                         }
@@ -172,8 +177,8 @@
                     active: false
                 };
                 return {
-                    onMessagePayload: function (payload) {
-                        switch (payload.type) {
+                    onMessageData: function (data) {
+                        switch (data.type) {
                             // TODO: implement
                         }
                     },
@@ -192,24 +197,26 @@
             }),
             websocket = (function () {
                 var self = {
+                    socket: undefined,
                     event: {
                         onMessage: function (evt) {
                             var message = $.parseJSON(evt.data);
-                            console.log("Received message: " + message);
 
                             if (message.type in self.handler.message) {
                                 self.handler.message[message.type](message);
-                            } else if (message.type in self.handler.payload) {
-                                self.handler.payload[message.type](message.payload);
+                            } else if (message.type in self.handler.data) {
+                                self.handler.data[message.type](message.data);
                             }
                         },
                         onClose: function () {
                             // websocket is closed.
-                            console.log("Connection closed.");
                             user.logout();
                         }
                     },
                     handler: {
+                        /**
+                         * Handlers accepting the whole received message.
+                         */
                         message: {
                             error: function (message) {
                                 if (message.type in self.handler.error) {
@@ -221,10 +228,13 @@
                                 user.logout();
                             }
                         },
-                        payload: {
-                            user: user.onMessagePayload,
-                            lobby: lobby.onMessagePayload,
-                            gameGomoku: function (payload) {
+                        /**
+                         * Handlers accepting the data part of the received message.
+                         */
+                        data: {
+                            user: user.onMessageData,
+                            lobby: lobby.onMessageData,
+                            gameGomoku: function (data) {
 
                             }
                         },
@@ -234,35 +244,27 @@
                     }
                 };
                 return {
-                    connect: function (url, name, password) {
-                        if (typeof webSocket === "object") {
-                            webSocket.close();
+                    connect: function (url, callback) {
+                        if (typeof self.socket === "object") {
+                            self.socket.close();
                         }
-                        webSocket = new WebSocket(url);
-                        webSocket.onopen = function () {
-                            // Web Socket is connected, send data using send()
-                            websocket.send("user", {
-                                "type": "login",
-                                "name": name,
-                                "password": password
-                            });
-                            console.log("Message is sent...");
-                        };
-                        webSocket.onmessage = self.event.onMessage;
-                        webSocket.onclose = self.event.onClose;
+                        self.socket = new WebSocket(url);
+                        self.socket.onopen = callback;
+                        self.socket.onmessage = self.event.onMessage;
+                        self.socket.onclose = self.event.onClose;
                     },
                     disconnect: function () {
-                        if (typeof webSocket === "object") {
-                            webSocket.close();
+                        if (typeof self.socket === "object") {
+                            self.socket.close();
                         }
-                        webSocket = undefined;
+                        self.socket = undefined;
                     },
-                    send: function (type, payload) {
+                    send: function (type, data) {
                         var message = {
                             "type": type,
-                            "payload": payload
+                            "data": data
                         };
-                        webSocket.send(JSON.stringify(message));
+                        self.socket.send(JSON.stringify(message));
                     }
                 };
             })(),

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.misaki.gomoku.server.lobby;
 
 import fi.misaki.gomoku.protocol.Message;
@@ -35,8 +30,8 @@ public class LobbyManager implements Serializable {
      * @param user
      */
     public void sendInitMessage(User user) {
-        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.INIT);
-        message.getPayload()
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.INIT);
+        message.getData()
                 .add("members", this.userManager.getMembersAsJsonArrayBuilder());
         userManager.sendMessageToUser(user, message);
     }
@@ -47,8 +42,8 @@ public class LobbyManager implements Serializable {
      * @param user The user who joined.
      */
     public void sendJoinMessage(User user) {
-        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.JOIN);
-        message.getPayload()
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.JOIN);
+        message.getData()
                 .add("name", user.getName());
 
         LOGGER.log(Level.FINEST, "LOBBY JOIN MESSAGE: {0}", message);
@@ -61,8 +56,8 @@ public class LobbyManager implements Serializable {
      * @param user The user who left.
      */
     public void sendPartMessage(User user) {
-        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.PART);
-        message.getPayload()
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.PART);
+        message.getData()
                 .add("name", user.getName());
 
         LOGGER.log(Level.FINEST, "LOBBY PART MESSAGE: {0}", message);
@@ -75,8 +70,8 @@ public class LobbyManager implements Serializable {
      * @param messageText
      */
     public void sendMessageToAll(User user, String messageText) {
-        PushMessage message = createPushMessageTemplate(LobbyMessagePayloadType.MESSAGE);
-        message.getPayload()
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.MESSAGE);
+        message.getData()
                 .add("from", user.getName())
                 .add("message", messageText);
 
@@ -89,9 +84,9 @@ public class LobbyManager implements Serializable {
      * @param type
      * @return
      */
-    private PushMessage createPushMessageTemplate(LobbyMessagePayloadType type) {
+    private PushMessage createPushMessageTemplate(LobbyMessageDataType type) {
         PushMessage message = new PushMessage(MessageType.LOBBY);
-        message.getPayload()
+        message.getData()
                 .add("type", type.getCode());
         return message;
     }

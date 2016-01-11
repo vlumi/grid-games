@@ -1,12 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.misaki.gomoku.protocol;
 
+import fi.misaki.gomoku.protocol.key.MessageKey;
 import fi.misaki.gomoku.protocol.key.MessageType;
-import fi.misaki.gomoku.protocol.key.PushMessageKey;
 import java.io.Serializable;
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
@@ -46,7 +41,7 @@ public class Message implements Serializable {
     protected JsonObjectBuilder toJsonObjectTemplate() {
         JsonBuilderFactory factory = Json.createBuilderFactory(null);
         return factory.createObjectBuilder()
-                .add(PushMessageKey.TYPE.getCode(), type.getCode());
+                .add(MessageKey.TYPE.getCode(), type.getCode());
     }
 
     @Override

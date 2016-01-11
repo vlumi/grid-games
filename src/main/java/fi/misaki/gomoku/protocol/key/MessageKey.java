@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.misaki.gomoku.protocol.key;
 
 import java.util.Arrays;
@@ -14,27 +9,35 @@ import java.util.stream.Collectors;
  * @author vlumi
  */
 public enum MessageKey {
-    TYPE("type"),
-    PAYLOAD("payload"),
-    UNKNOWN("");
+    TYPE("type", true),
+    DATA("data", false),
+    UNKNOWN();
 
-    private String code;
+    private final String code;
+    private final boolean mandatory;
 
     private MessageKey() {
+        this.code = "";
+        this.mandatory = false;
     }
 
-    private MessageKey(String code) {
+    private MessageKey(String code, boolean mandatory) {
         this.code = code;
+        this.mandatory = mandatory;
     }
 
     public String getCode() {
         return code;
     }
 
+    public boolean isMandatory() {
+        return mandatory;
+    }
+
     public static MessageKey ofCode(String code) {
         return Arrays.asList(MessageKey.values())
                 .stream()
-                .filter(o -> o.getCode().equals(code))
+                .filter(value -> value.getCode().equals(code))
                 .findAny()
                 .orElse(UNKNOWN);
 
@@ -42,7 +45,13 @@ public enum MessageKey {
 
     public static List<MessageKey> getValidValues() {
         return Arrays.asList(MessageKey.values()).stream()
-                .filter(o -> o != MessageKey.UNKNOWN)
+                .filter(value -> value != MessageKey.UNKNOWN)
+                .collect(Collectors.toList());
+    }
+
+    public static List<MessageKey> getMandatoryValues() {
+        return Arrays.asList(MessageKey.values()).stream()
+                .filter(value -> value.isMandatory())
                 .collect(Collectors.toList());
     }
 

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.misaki.gomoku.protocol;
 
 import fi.misaki.gomoku.protocol.key.MessageType;
@@ -25,7 +20,7 @@ public class RequestMessage extends Message {
      * The request content as a JSON object, the exact format depending on the
      * message type.
      */
-    private JsonObject payload;
+    private JsonObject data;
 
     /**
      * Create the request object from the JSON string.
@@ -45,11 +40,11 @@ public class RequestMessage extends Message {
      */
     public RequestMessage(JsonObject data) {
         super(MessageType.ofCode(data.getString(MessageKey.TYPE.getCode(), "")));
-        this.payload = data.getJsonObject(MessageKey.PAYLOAD.getCode());
+        this.data = data.getJsonObject(MessageKey.DATA.getCode());
     }
 
-    public JsonObject getPayload() {
-        return payload;
+    public JsonObject getData() {
+        return data;
     }
 
     private static JsonObject parseFromJsonString(String data)
@@ -62,6 +57,11 @@ public class RequestMessage extends Message {
             throw new InvalidRequestException("Invalid request.");
 
         }
+    }
+
+    @Override
+    public String toString() {
+        return "RequestMessage{" + "data=" + data + "} < " + super.toString();
     }
 
 }
