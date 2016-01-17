@@ -55,6 +55,22 @@ public class UserManager implements Serializable {
     }
 
     /**
+     *
+     * @param name
+     * @return
+     */
+    public User getUserForName(String name) {
+        synchronized (this.usersByName) {
+            User user = this.usersByName.get(name);
+            if (user == null) {
+                // TODO: error
+                return null;
+            }
+            return user;
+        }
+    }
+
+    /**
      * Attempt to start as session for the given user.
      *
      * If the name is not given, creates an anonymous session.
@@ -64,7 +80,7 @@ public class UserManager implements Serializable {
      * sessions.
      *
      * @param name Name of the user, or an empty string for anonymous.
-     * @param passwordHash Hashed password for the user to allow multiple
+     * @param password Hashed password for the user to allow multiple
      * connections for the user.
      * @param session The websocket session that requested the session to be
      * started.
@@ -72,7 +88,7 @@ public class UserManager implements Serializable {
      * user.
      * @throws InvalidRequestException In case of any errors.
      */
-    public User startSession(String name, String passwordHash, Session session)
+    public User startSession(String name, String password, Session session)
             throws InvalidRequestException {
 
         LOGGER.log(Level.FINEST, "Start session: {0}", name);
@@ -87,9 +103,10 @@ public class UserManager implements Serializable {
                     LOGGER.log(Level.FINEST, "- New user");
                     user = new User();
                     user.setName(name);
-                    user.setPasswordHash(passwordHash);
+                    // TODO: hash the password
+                    user.setPasswordHash(password);
                     this.usersByName.put(name, user);
-                } else if (passwordHash.isEmpty() || !user.getPasswordHash().equals(passwordHash)) {
+                } else if (password.isEmpty() || !user.getPasswordHash().equals(password)) {
                     throw new InvalidRequestException("Username and password don't match.");
                 }
             }
@@ -197,13 +214,34 @@ public class UserManager implements Serializable {
      */
     public void sendMessageToUser(User user, Message message) {
         String messageString = message.toJsonObject().toString();
-        LOGGER.log(Level.FINEST, "Send message to user {0}: {1}", new String[]{user.getName(), messageString});
 
+        sendMessageToUser(user, messageString);
+
+    }
+
+    /**
+     * Sends a message to users.
+     *
+     * @param users Target users.
+     * @param message Message to send.
+     */
+    public void sendMessageToUsers(Set<User> users, Message message) {
+        String messageString = message.toJsonObject().toString();
+
+        users.forEach(user -> this.sendMessageToUser(user, messageString));
+    }
+
+    /**
+     *
+     * @param user
+     * @param messageString
+     */
+    private void sendMessageToUser(User user, String messageString) {
+        LOGGER.log(Level.FINEST, "Send message to user {0}: {1}", new String[]{user.getName(), messageString});
         user.getSessions().forEach(session -> {
             LOGGER.log(Level.FINEST, " - Send to session: {0}", session.getId());
             session.getAsyncRemote().sendText(messageString);
         });
-
     }
 
 }

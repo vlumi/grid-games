@@ -6,10 +6,14 @@ import fi.misaki.gomoku.protocol.PushMessage;
 import fi.misaki.gomoku.server.user.User;
 import fi.misaki.gomoku.server.user.UserManager;
 import java.io.Serializable;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.json.JsonObject;
 
 /**
  *
@@ -24,6 +28,21 @@ public class LobbyManager implements Serializable {
 
     @Inject
     private UserManager userManager;
+
+    public void handleChatMessageRequest(User user, JsonObject data) {
+        String message = data.getString("message", "");
+        String to = data.getString("to", "");
+
+        LOGGER.log(Level.FINEST, "Lobby message to {0}: {1}", new String[]{to, message});
+
+        if (to.isEmpty()) {
+            sendChatMessageToAll(user, message);
+        } else {
+            boolean isPrivate = data.getBoolean("private", false);
+            User toUser = userManager.getUserForName(to);
+            sendChatMessage(user, toUser, message, isPrivate);
+        }
+    }
 
     /**
      *
@@ -66,17 +85,54 @@ public class LobbyManager implements Serializable {
 
     /**
      *
-     * @param user
+     * @param from
      * @param messageText
      */
-    public void sendMessageToAll(User user, String messageText) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.MESSAGE);
+    public void sendChatMessageToAll(User from, String messageText) {
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.CHAT_MESSAGE);
         message.getData()
-                .add("from", user.getName())
+                .add("from", from.getName())
                 .add("message", messageText);
 
         LOGGER.log(Level.FINEST, "LOBBY MESSAGE: {0}", message);
         sendMessageToAllSessions(message);
+    }
+
+    /**
+     *
+     * @param from
+     * @param to
+     * @param messageText
+     * @param isPrivate
+     */
+    public void sendChatMessage(User from, User to, String messageText, boolean isPrivate) {
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.CHAT_MESSAGE);
+        message.getData()
+                .add("from", from.getName())
+                .add("to", to.getName())
+                .add("message", messageText)
+                .add("private", isPrivate);
+
+        LOGGER.log(Level.FINEST, "LOBBY MESSAGE: {0}", message);
+        if (isPrivate) {
+            final Set<User> targetUsers = Stream.of(from, to).collect(Collectors.toSet());
+            this.userManager.sendMessageToUsers(targetUsers, message);
+        } else {
+            sendMessageToAllSessions(message);
+        }
+    }
+
+    public void sendUserBusy(User user) {
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.STATUS);
+        message.getData()
+                .add("status", "busy");
+
+    }
+
+    public void sendUserFree(User user) {
+        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.STATUS);
+        message.getData()
+                .add("status", "free");
     }
 
     /**

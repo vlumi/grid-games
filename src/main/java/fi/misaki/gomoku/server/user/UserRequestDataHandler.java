@@ -3,6 +3,7 @@ package fi.misaki.gomoku.server.user;
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.server.RequestDataHandler;
 import fi.misaki.gomoku.server.lobby.LobbyManager;
+import fi.misaki.gomoku.server.lobby.LobbyMessageDataType;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
@@ -35,6 +36,18 @@ public class UserRequestDataHandler extends RequestDataHandler {
     @Override
     public void handleRequestData(Session session, JsonObject data)
             throws InvalidRequestException {
+
+        switch (UserMessageDataType.ofCode(data.getString("type", ""))) {
+            case LOGIN:
+                handleLoginRequest(session, data);
+                break;
+            default:
+                throw new InvalidRequestException("Invalid user request type.");
+        }
+
+    }
+
+    private void handleLoginRequest(Session session, JsonObject data) throws InvalidRequestException {
         User user = loginUser(session, data);
         LOGGER.log(Level.FINE, "User joined: {0}", user.getName());
 
@@ -44,6 +57,8 @@ public class UserRequestDataHandler extends RequestDataHandler {
         if (user.getSessions().size() == 1) {
             // New user
             lobbyManager.sendJoinMessage(user);
+        } else {
+            // TODO: check if in a game room -- send status if needed
         }
     }
 
@@ -56,7 +71,6 @@ public class UserRequestDataHandler extends RequestDataHandler {
     private User loginUser(Session session, JsonObject data)
             throws InvalidRequestException {
 
-        // TODO: hash the password
         String name = data.getString("name", "");
         String password = data.getString("password", "");
         return userManager.startSession(name, password, session);

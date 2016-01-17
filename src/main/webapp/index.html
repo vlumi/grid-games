@@ -5,18 +5,139 @@
         <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
         <script language="javascript" type="text/javascript" src="/gomoku-websocket/static/js/gomoku.js"></script>
         <style type="text/css">
-            #lobby .self {
-                color: red;
+            #lobbyMembers {
+                padding: 0;
+                margin: 0;
+                border: solid black 1px;
+                width: 200px;
+                height: 200px;
+                overflow: auto;
+            }
+            #lobbyMembers li {
+                list-style-type: none;
+                padding: 0 1em;
+                margin: 0;
+                color: forestgreen;
+            }
+            #lobbyMembers .selected {
+                background-color: gold;
+                color: darkgreen;
+            }
+            #lobbyMembers .self {
+                color: darkslategrey;
+            }
+            #lobbyMembers .busy {
+                color: coral;
+            }
+            #lobby {
+                padding: 0;
+                margin: 0;
+                border: solid black 1px;
+                width: 500px;
+                height: 300px;
+                overflow: scroll;
+            }
+            #lobby div {
+                position: relative;
+                left: 0px;
+                height: 1em;
+                margin: 0;
+                padding: 0;
+            }
+            #lobby .timestamp {
+                position: absolute;
+                width: 70px;
+                left: 0px;
+                top: 0px;
+            }
+            #lobby .user {
+                position: absolute;
+                left: 70px;
+                top: 0px;
+                width: 100px;
+                overflow: hidden;
+            }
+            #lobby .message {
+                position: absolute;
+                left: 170px;
+                top: 0px;
+                white-space: nowrap;
+            }
+            #lobby .fromSelf {
+                color: darkslategrey;
+            }
+            #lobby .private {
+                color: darkred;
+            }
+            #gomokuArea .gameBoard {
+                border-collapse: collapse;
+                background-color: gold;
+            }
+            #gomokuArea .gameBoard .free {
+                background: none;
+            }
+            #gomokuArea .gameBoard.size30 td {
+                width: 30px;
+                height: 30px;
+                border: 0;
+                padding: 0;
+            }
+            #gomokuArea .gameBoard.size30 td div {
+                width: 30px;
+                height: 30px;
+                border: 0;
+                padding: 0;
+            }
+            #gomokuArea .gameBoard.size30.myTurn.side1 .free:hover {
+                background-image:  url("static/img/30/piece_1.png")
+            }
+            #gomokuArea .gameBoard.size30.myTurn.side2 .free:hover {
+                background-image:  url("static/img/30/piece_2.png")
+            }
+            #gomokuArea .gameBoard.size30 .side1,
+            #gomokuArea .gameBoard.size30 .side1:hover {
+                background-image: url("static/img/30/piece_1.png")
+            }
+            #gomokuArea .gameBoard.size30 .side2,
+            #gomokuArea .gameBoard.size30 .side2:hover {
+                background-image: url("static/img/30/piece_2.png")
+            }
+            #gomokuArea .gameBoard.size30 .top.left {
+                background-image: url("static/img/30/bg_top_left.png")
+            }
+            #gomokuArea .gameBoard.size30 .top.center {
+                background-image: url("static/img/30/bg_top_center.png")
+            }
+            #gomokuArea .gameBoard.size30 .top.right {
+                background-image: url("static/img/30/bg_top_right.png")
+            }
+            #gomokuArea .gameBoard.size30 .middle.left {
+                background-image: url("static/img/30/bg_middle_left.png")
+            }
+            #gomokuArea .gameBoard.size30 .middle.center {
+                background-image: url("static/img/30/bg_middle_center.png")
+            }
+            #gomokuArea .gameBoard.size30 .middle.right {
+                background-image: url("static/img/30/bg_middle_right.png")
+            }
+            #gomokuArea .gameBoard.size30 .bottom.left {
+                background-image: url("static/img/30/bg_bottom_left.png")
+            }
+            #gomokuArea .gameBoard.size30 .bottom.center {
+                background-image: url("static/img/30/bg_bottom_center.png")
+            }
+            #gomokuArea .gameBoard.size30 .bottom.right {
+                background-image: url("static/img/30/bg_bottom_right.png")
             }
         </style>
     </head>
     <body>
-        <h1>Hello World!</h1>
+        <h1>Gomoku</h1>
         <form onsubmit="return false;">
             <span id="authArea">
                 <span id="loginArea">
                     <input id="url" type="text" placeholder="url" value="ws://localhost:8080/gomoku-websocket/gomoku">
-                    <input id="name" type="text" placeholder="name">
+                    <input id="name" type="text" placeholder="name" maxlength="10">
                     <input id="password" type="password" placeholder="password">
                     <input type="submit" id="login" value="Login">
                 </span>
@@ -24,15 +145,22 @@
                     <input type="submit" id="logout" value="Logout" disabled>
                 </span>
             </span>
+            <div id="gomokuArea">
+            </div>
             <div id="lobbyArea">
-                <div id="lobbyMembersArea">
+                <div id="lobbyMembersArea" style="float:left">
                     <select id="lobbyMembers" size="10"></select>
                 </div>
-                <div>
-                    <input type="text" id="lobbyMessage">
-                    <input type="submit" id="sendLobbyMessage" value="Send">
-                </div>
-                <div id="lobby">
+                <div id="lobbyMessageArea" style="float:left">
+                    <div id="lobbySendArea">
+                        <input type="text" id="lobbyMessage" maxlength="160">
+                        <input type="checkbox" id="lobbyPrivateMessage"/>
+                        <label for="lobbyPrivateMessage">private</label>
+                        <input type="submit" id="sendLobbyMessage" value="Send">
+                        <input type="submit" id="challengeGomoku" value="Gomoku!">
+                    </div>
+                    <div id="lobby">
+                    </div>
                 </div>
             </div>
         </form>

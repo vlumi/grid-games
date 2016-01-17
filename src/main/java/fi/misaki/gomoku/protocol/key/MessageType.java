@@ -7,11 +7,10 @@ import java.util.Arrays;
  * @author vlumi
  */
 public enum MessageType {
-
-    ERROR("error"),
     USER("user"),
     LOBBY("lobby"),
     GOMOKU("gomoku"),
+    ERROR("error"),
     UNKNOWN("");
 
     private final String code;

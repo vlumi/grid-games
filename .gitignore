@@ -1,9 +1,10 @@
 /target/
 nb-configuration.xml
 backup/
-*.jpg
 *.db
 *.sqlite3*
 *~
 \#*
 .*.attr
+.DS_Store
+/nbproject/

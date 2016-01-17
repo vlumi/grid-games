@@ -7,9 +7,7 @@ import fi.misaki.gomoku.server.user.UserManager;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
-import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.websocket.Session;
 
 /**
@@ -23,6 +21,8 @@ public class GomokuRequestDataHandler extends RequestDataHandler {
 
     private static final Logger LOGGER = Logger.getLogger(GomokuRequestDataHandler.class.getName());
 
+    @Inject
+    private GomokuManager gomokuManager;
     @Inject
     private UserManager userManager;
 
@@ -38,10 +38,32 @@ public class GomokuRequestDataHandler extends RequestDataHandler {
         User user = userManager.getUserForSessionId(session.getId());
 
         // TODO: parse the input
-        // TODO: take action, based on input
-        JsonObjectBuilder responseData = Json.createBuilderFactory(null)
-                .createObjectBuilder();
+        switch (GomokuMessageDataType.ofCode(data.getString("type", ""))) {
+            case STATE:
+                gomokuManager.handleStateRequest(user, data);
+                break;
+            case CHALLENGE:
+                gomokuManager.handleChallengeRequest(user, data);
+                break;
+            case CANCEL_CHALLENGE:
+                gomokuManager.handleCancelChallengeRequest(user, data);
+                break;
+            case ACCEPT_CHALLENGE:
+                gomokuManager.handleAcceptChallengeRequest(user, data);
+                break;
+            case REJECT_CHALLENGE:
+                gomokuManager.handleRejectChallengeRequest(user, data);
+                break;
+            case PLACE_PIECE:
+                gomokuManager.handlePlacePieceRequest(user, data);
+                break;
+            case LEAVE:
+                gomokuManager.handleLeaveRequest(user, data);
+            case GAME_OVER:
+            default:
+                throw new InvalidRequestException("Invalid gomoku request type.");
 
+        }
     }
 
 }

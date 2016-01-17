@@ -8,11 +8,14 @@ import java.util.Arrays;
  */
 public enum GomokuMessageDataType {
     STATE("state"),
-    JOIN(""),
     CHALLENGE("challenge"),
-    ACCEPT("accept"),
-    REJECT("reject"),
-    MOVE("move"),
+    CANCEL_CHALLENGE("cancelChallenge"),
+    ACCEPT_CHALLENGE("acceptChallenge"),
+    REJECT_CHALLENGE("rejectChallenge"),
+    PLACE_PIECE("placePiece"),
+    FORFEIT("forfeit"),
+    GAME_OVER("gameOver"),
+    LEAVE("leave"),
     UNKNOWN("");
 
     private final String code;

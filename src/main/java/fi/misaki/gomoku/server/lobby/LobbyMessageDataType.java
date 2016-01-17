@@ -10,7 +10,8 @@ public enum LobbyMessageDataType {
     INIT("init"),
     JOIN("join"),
     PART("part"),
-    MESSAGE("message"),
+    CHAT_MESSAGE("chatMessage"),
+    STATUS("status"),
     UNKNOWN("");
 
     private final String code;

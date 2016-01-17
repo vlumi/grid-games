@@ -8,6 +8,7 @@ import java.util.Arrays;
  */
 public enum UserMessageDataType {
     LOGIN("login"),
+    ERROR("error"),
     UNKNOWN("");
 
     private final String code;
