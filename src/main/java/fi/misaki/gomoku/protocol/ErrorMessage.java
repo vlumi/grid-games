@@ -1,6 +1,6 @@
 package fi.misaki.gomoku.protocol;
 
-import fi.misaki.gomoku.protocol.key.MessageType;
+import fi.misaki.gomoku.protocol.key.MessageContext;
 import fi.misaki.gomoku.protocol.key.ErrorMessageKey;
 import javax.json.JsonObjectBuilder;
 
@@ -15,7 +15,7 @@ public class ErrorMessage extends Message {
     private final String text;
 
     public ErrorMessage(String text) {
-        super(MessageType.ERROR);
+        super(MessageContext.ERROR);
         this.text = text;
     }
 

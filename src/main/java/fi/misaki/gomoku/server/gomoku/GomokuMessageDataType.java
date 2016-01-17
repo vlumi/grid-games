@@ -7,6 +7,7 @@ import java.util.Arrays;
  * @author vlumi
  */
 public enum GomokuMessageDataType {
+    // TODO: split to request/response?
     STATE("state"),
     CHALLENGE("challenge"),
     CANCEL_CHALLENGE("cancelChallenge"),
@@ -15,6 +16,7 @@ public enum GomokuMessageDataType {
     PLACE_PIECE("placePiece"),
     FORFEIT("forfeit"),
     GAME_OVER("gameOver"),
+    NEW_GAME("newGame"),
     LEAVE("leave"),
     UNKNOWN("");
 

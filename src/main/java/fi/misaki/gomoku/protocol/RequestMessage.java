@@ -1,6 +1,6 @@
 package fi.misaki.gomoku.protocol;
 
-import fi.misaki.gomoku.protocol.key.MessageType;
+import fi.misaki.gomoku.protocol.key.MessageContext;
 import fi.misaki.gomoku.protocol.key.MessageKey;
 import java.io.StringReader;
 import javax.json.Json;
@@ -18,7 +18,7 @@ public class RequestMessage extends Message {
 
     /**
      * The request content as a JSON object, the exact format depending on the
-     * message type.
+     * message context.
      */
     private JsonObject data;
 
@@ -39,7 +39,7 @@ public class RequestMessage extends Message {
      * @param data The request as a JSON object.
      */
     public RequestMessage(JsonObject data) {
-        super(MessageType.ofCode(data.getString(MessageKey.TYPE.getCode(), "")));
+        super(MessageContext.ofCode(data.getString(MessageKey.CONTEXT.getCode(), "")));
         this.data = data.getJsonObject(MessageKey.DATA.getCode());
     }
 

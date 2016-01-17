@@ -1,7 +1,7 @@
 package fi.misaki.gomoku.server.lobby;
 
 import fi.misaki.gomoku.protocol.Message;
-import fi.misaki.gomoku.protocol.key.MessageType;
+import fi.misaki.gomoku.protocol.key.MessageContext;
 import fi.misaki.gomoku.protocol.PushMessage;
 import fi.misaki.gomoku.server.user.User;
 import fi.misaki.gomoku.server.user.UserManager;
@@ -52,7 +52,7 @@ public class LobbyManager implements Serializable {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.INIT);
         message.getData()
                 .add("members", this.userManager.getMembersAsJsonArrayBuilder());
-        userManager.sendMessageToUser(user, message);
+        userManager.sendMessage(user, message);
     }
 
     /**
@@ -116,7 +116,7 @@ public class LobbyManager implements Serializable {
         LOGGER.log(Level.FINEST, "LOBBY MESSAGE: {0}", message);
         if (isPrivate) {
             final Set<User> targetUsers = Stream.of(from, to).collect(Collectors.toSet());
-            this.userManager.sendMessageToUsers(targetUsers, message);
+            this.userManager.sendMessage(targetUsers, message);
         } else {
             sendMessageToAllSessions(message);
         }
@@ -141,7 +141,7 @@ public class LobbyManager implements Serializable {
      * @return
      */
     private PushMessage createPushMessageTemplate(LobbyMessageDataType type) {
-        PushMessage message = new PushMessage(MessageType.LOBBY);
+        PushMessage message = new PushMessage(MessageContext.LOBBY);
         message.getData()
                 .add("type", type.getCode());
         return message;

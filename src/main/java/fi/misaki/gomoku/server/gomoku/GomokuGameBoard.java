@@ -32,10 +32,14 @@ public class GomokuGameBoard implements Serializable {
         this.sideLength = sideLength;
         this.winningLength = winningLength;
         this.grid = new int[sideLength][sideLength];
+        reset();
+        this.turnsLeft = this.sideLength * this.sideLength;
+    }
+
+    public void reset() {
         for (int[] row : this.grid) {
             Arrays.fill(row, GomokuCellState.FREE.getValue());
         }
-        this.turnsLeft = this.sideLength * this.sideLength;
     }
 
     public GomokuCellState getSideAtPosition(int column, int row) {

@@ -1,6 +1,6 @@
 package fi.misaki.gomoku.protocol;
 
-import fi.misaki.gomoku.protocol.key.MessageType;
+import fi.misaki.gomoku.protocol.key.MessageContext;
 import fi.misaki.gomoku.protocol.key.PushMessageKey;
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -14,8 +14,8 @@ public class PushMessage extends Message {
 
     private static final long serialVersionUID = 5313709501800975594L;
 
-    public PushMessage(MessageType type) {
-        super(type);
+    public PushMessage(MessageContext context) {
+        super(context);
     }
 
     /**

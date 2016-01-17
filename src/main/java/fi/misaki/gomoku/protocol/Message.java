@@ -1,7 +1,7 @@
 package fi.misaki.gomoku.protocol;
 
 import fi.misaki.gomoku.protocol.key.MessageKey;
-import fi.misaki.gomoku.protocol.key.MessageType;
+import fi.misaki.gomoku.protocol.key.MessageContext;
 import java.io.Serializable;
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
@@ -20,33 +20,33 @@ public class Message implements Serializable {
     /**
      * The type of the message, as defined in the enum MessageType.
      */
-    private final MessageType type;
+    private final MessageContext context;
 
     public Message() {
-        this.type = MessageType.UNKNOWN;
+        this.context = MessageContext.UNKNOWN;
     }
 
-    public Message(MessageType type) {
-        this.type = type;
+    public Message(MessageContext context) {
+        this.context = context;
     }
 
     public JsonObject toJsonObject() {
         return this.toJsonObjectTemplate().build();
     }
 
-    public MessageType getType() {
-        return type;
+    public MessageContext getContext() {
+        return context;
     }
 
     protected JsonObjectBuilder toJsonObjectTemplate() {
         JsonBuilderFactory factory = Json.createBuilderFactory(null);
         return factory.createObjectBuilder()
-                .add(MessageKey.TYPE.getCode(), type.getCode());
+                .add(MessageKey.CONTEXT.getCode(), context.getCode());
     }
 
     @Override
     public String toString() {
-        return "AbstractMessage{" + "type=" + type + '}';
+        return "AbstractMessage{" + "context=" + context + '}';
     }
 
 }

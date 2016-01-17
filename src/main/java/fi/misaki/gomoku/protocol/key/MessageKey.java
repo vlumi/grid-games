@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
  * @author vlumi
  */
 public enum MessageKey {
-    TYPE("type", true),
+    CONTEXT("context", true),
     DATA("data", false),
     UNKNOWN();
 

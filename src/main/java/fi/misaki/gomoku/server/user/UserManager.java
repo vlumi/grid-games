@@ -3,7 +3,10 @@ package fi.misaki.gomoku.server.user;
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.protocol.Message;
 import fi.misaki.gomoku.protocol.PushMessage;
-import fi.misaki.gomoku.protocol.key.MessageType;
+import fi.misaki.gomoku.protocol.key.MessageContext;
+import fi.misaki.gomoku.server.gomoku.GomokuGame;
+import fi.misaki.gomoku.server.gomoku.GomokuManager;
+import fi.misaki.gomoku.server.lobby.LobbyManager;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,8 +17,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import javax.websocket.Session;
 
 /**
@@ -29,6 +34,11 @@ public class UserManager implements Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(UserManager.class.getName());
 
+    @Inject
+    private LobbyManager lobbyManager;
+    @Inject
+    private GomokuManager gomokuManager;
+
     /**
      *
      */
@@ -39,6 +49,45 @@ public class UserManager implements Serializable {
     private final Map<String, User> usersByName = Collections.synchronizedMap(new HashMap<>());
 
     private final AtomicLong anonymousCounter = new AtomicLong(1);
+
+    /**
+     *
+     * @param session
+     * @param data
+     * @throws InvalidRequestException
+     */
+    public void handleLoginRequest(Session session, JsonObject data) throws InvalidRequestException {
+        User user = loginUser(session, data);
+        LOGGER.log(Level.FINE, "User joined: {0}", user.getName());
+
+        sendPostLoginMessage(user);
+        lobbyManager.sendInitMessage(user);
+
+        if (user.getSessions().size() == 1) {
+            // New user
+            lobbyManager.sendJoinMessage(user);
+        } else {
+            // TODO: check if in a game room -- send status if needed
+            GomokuGame game = this.gomokuManager.findGame(user);
+            if (game != null) {
+                gomokuManager.sendStateToSession(game, session);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param request
+     * @param session
+     * @throws InvalidRequestException
+     */
+    private User loginUser(Session session, JsonObject data)
+            throws InvalidRequestException {
+
+        String name = data.getString("name", "");
+        String password = data.getString("password", "");
+        return startSession(name, password, session);
+    }
 
     /**
      *
@@ -199,11 +248,11 @@ public class UserManager implements Serializable {
      * @param user Target user.
      */
     public void sendPostLoginMessage(User user) {
-        PushMessage loginMessage = new PushMessage(MessageType.USER);
+        PushMessage loginMessage = new PushMessage(MessageContext.USER);
         loginMessage.getData()
                 .add("type", UserMessageDataType.LOGIN.getCode())
                 .add("name", user.getName());
-        this.sendMessageToUser(user, loginMessage);
+        this.sendMessage(user, loginMessage);
     }
 
     /**
@@ -212,10 +261,10 @@ public class UserManager implements Serializable {
      * @param user Target user.
      * @param message Message to send.
      */
-    public void sendMessageToUser(User user, Message message) {
+    public void sendMessage(User user, Message message) {
         String messageString = message.toJsonObject().toString();
 
-        sendMessageToUser(user, messageString);
+        sendMessage(user, messageString);
 
     }
 
@@ -225,10 +274,23 @@ public class UserManager implements Serializable {
      * @param users Target users.
      * @param message Message to send.
      */
-    public void sendMessageToUsers(Set<User> users, Message message) {
+    public void sendMessage(Set<User> users, Message message) {
         String messageString = message.toJsonObject().toString();
 
-        users.forEach(user -> this.sendMessageToUser(user, messageString));
+        users.forEach(user -> this.sendMessage(user, messageString));
+    }
+
+    /**
+     * Sends a message to a user.
+     *
+     * @param session Target session.
+     * @param message Message to send.
+     */
+    public void sendMessage(Session session, Message message) {
+        String messageString = message.toJsonObject().toString();
+
+        sendMessage(session, messageString);
+
     }
 
     /**
@@ -236,12 +298,24 @@ public class UserManager implements Serializable {
      * @param user
      * @param messageString
      */
-    private void sendMessageToUser(User user, String messageString) {
+    private void sendMessage(User user, String messageString) {
         LOGGER.log(Level.FINEST, "Send message to user {0}: {1}", new String[]{user.getName(), messageString});
         user.getSessions().forEach(session -> {
             LOGGER.log(Level.FINEST, " - Send to session: {0}", session.getId());
             session.getAsyncRemote().sendText(messageString);
         });
+    }
+
+    /**
+     *
+     * @param user
+     * @param messageString
+     */
+    private void sendMessage(Session session, String messageString) {
+        User user = this.usersBySessionId.get(session.getId());
+        LOGGER.log(Level.FINEST, "Send message to user {0}: {1}", new String[]{user.getName(), messageString});
+        LOGGER.log(Level.FINEST, " - Send to session: {0}", session.getId());
+        session.getAsyncRemote().sendText(messageString);
     }
 
 }

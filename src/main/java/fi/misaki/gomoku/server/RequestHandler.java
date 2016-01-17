@@ -42,7 +42,7 @@ public class RequestHandler implements Serializable {
         RequestMessage request = new RequestMessage(message);
 
         RequestDataHandler handler;
-        switch (request.getType()) {
+        switch (request.getContext()) {
             case USER:
                 handler = this.authRequestHandler;
                 break;

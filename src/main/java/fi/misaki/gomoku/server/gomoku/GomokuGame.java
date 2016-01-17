@@ -7,7 +7,9 @@ package fi.misaki.gomoku.server.gomoku;
 
 import fi.misaki.gomoku.server.user.User;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 import javax.json.Json;
@@ -49,15 +51,23 @@ public class GomokuGame {
 
     public void start() {
         synchronized (this) {
+            if (this.running && this.gameOver) {
+                // After the previous game, require two starts, one from each player.
+                this.running = false;
+                this.gameOver = false;
+                return;
+            }
             if (this.playerWhite != null
                     && this.playerBlack != null
                     && !this.gameOver) {
                 this.currentTurn = GomokuSide.WHITE;
                 this.running = true;
+                this.board.reset();
+                this.turnHistory.clear();
             }
             if (this.winner != null && this.loser != null) {
-                this.playerWhite = winner;
-                this.playerBlack = winner;
+                this.playerWhite = this.winner;
+                this.playerBlack = this.loser;
             }
         }
     }
@@ -118,16 +128,6 @@ public class GomokuGame {
         this.running = false;
     }
 
-    public boolean isReady() {
-        if (this.playerWhite != null
-                && this.playerBlack != null
-                && !this.gameOver) {
-            this.running = true;
-            return true;
-        }
-        return false;
-    }
-
     public boolean isRunning() {
         return this.running && !this.gameOver;
     }
@@ -138,6 +138,13 @@ public class GomokuGame {
 
     public boolean isGameOver() {
         return gameOver;
+    }
+
+    public Set<User> getPlayers() {
+        final Set<User> players = new HashSet<>();
+        players.add(getPlayerWhite());
+        players.add(getPlayerBlack());
+        return players;
     }
 
     public User getWinner() {
@@ -227,9 +234,11 @@ public class GomokuGame {
         switch (winner) {
             case WHITE:
                 this.winner = this.playerWhite;
+                this.loser = this.playerBlack;
                 break;
             case BLACK:
                 this.winner = this.playerBlack;
+                this.loser = this.playerWhite;
                 break;
         }
     }

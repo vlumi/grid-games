@@ -6,7 +6,7 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum MessageType {
+public enum MessageContext {
     USER("user"),
     LOBBY("lobby"),
     GOMOKU("gomoku"),
@@ -15,7 +15,7 @@ public enum MessageType {
 
     private final String code;
 
-    private MessageType(String code) {
+    private MessageContext(String code) {
         this.code = code;
     }
 
@@ -23,8 +23,8 @@ public enum MessageType {
         return code;
     }
 
-    public static MessageType ofCode(String code) {
-        return Arrays.asList(MessageType.values())
+    public static MessageContext ofCode(String code) {
+        return Arrays.asList(MessageContext.values())
                 .stream()
                 .filter(value -> value.getCode().equals(code))
                 .findAny()

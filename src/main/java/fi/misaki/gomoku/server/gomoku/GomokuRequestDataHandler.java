@@ -39,9 +39,6 @@ public class GomokuRequestDataHandler extends RequestDataHandler {
 
         // TODO: parse the input
         switch (GomokuMessageDataType.ofCode(data.getString("type", ""))) {
-            case STATE:
-                gomokuManager.handleStateRequest(user, data);
-                break;
             case CHALLENGE:
                 gomokuManager.handleChallengeRequest(user, data);
                 break;
@@ -57,8 +54,12 @@ public class GomokuRequestDataHandler extends RequestDataHandler {
             case PLACE_PIECE:
                 gomokuManager.handlePlacePieceRequest(user, data);
                 break;
+            case NEW_GAME:
+                gomokuManager.handleNewGame(user, data);
+                break;
             case LEAVE:
                 gomokuManager.handleLeaveRequest(user, data);
+                break;
             case GAME_OVER:
             default:
                 throw new InvalidRequestException("Invalid gomoku request type.");

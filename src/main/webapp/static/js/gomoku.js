@@ -90,25 +90,6 @@
                 var self = {
                     memberList: [],
                     memberStatuses: {},
-                    send: function () {
-                        var
-                                message,
-                                to = $("#lobbyMembers").val();
-                        message = {
-                            type: "chatMessage",
-                            message: $("#lobbyMessage").val(),
-                            to: "",
-                            private: false
-                        };
-                        if ($("#lobbyPrivateMessage").prop("checked")) {
-                            message.to = to;
-                            message.private = true;
-                        }
-                        if (typeof message.message === "string" && message.message.length > 0) {
-                            websocket.send("lobby", message);
-                        }
-                        $("#lobbyMessage").val("");
-                    },
                     ui: {
                         getTimestamp: function () {
                             var d = new Date(),
@@ -141,6 +122,25 @@
                                             .prop("selected", true);
                                 }
                             });
+                        },
+                        sendMessage: function () {
+                            var
+                                    message,
+                                    to = $("#lobbyMembers").val();
+                            message = {
+                                type: "chatMessage",
+                                message: $("#lobbyMessage").val(),
+                                to: "",
+                                private: false
+                            };
+                            if ($("#lobbyPrivateMessage").prop("checked")) {
+                                message.to = to;
+                                message.private = true;
+                            }
+                            if (typeof message.message === "string" && message.message.length > 0) {
+                                websocket.send("lobby", message);
+                            }
+                            $("#lobbyMessage").val("");
                         },
                         addMessage: function (from, message, isFromSelf, isPrivate) {
                             var $entry, $timestamp, $user, $message;
@@ -280,13 +280,13 @@
                                     $(event.currentTarget).addClass("selected");
                                 })
                                 .on("click.sendLobbyMessage", "#lobbyArea.active #sendLobbyMessage", function (event) {
-                                    self.send();
+                                    self.ui.sendMessage();
                                     return false;
                                 })
                                 .on("keypress", "#lobbyMessage", function (event) {
                                     switch (event.keyCode) {
                                         case 13:
-                                            self.send();
+                                            self.ui.sendMessage();
                                             return false;
                                     }
                                 });
@@ -294,6 +294,17 @@
                     onMessageData: function (data) {
                         if (data.type in self.handler.data) {
                             self.handler.data[data.type](data);
+                        }
+                    },
+                    sendPublicMessage: function (content) {
+                        var message = {
+                            type: "chatMessage",
+                            message: content,
+                            to: "",
+                            private: false
+                        };
+                        if (typeof message.message === "string" && message.message.length > 0) {
+                            websocket.send("lobby", message);
                         }
                     },
                     onClose: function () {
@@ -407,6 +418,20 @@
                         };
                         websocket.send("gomoku", message);
                     },
+                    newGame: function () {
+                        var message = {
+                            "type": "newGame"
+                        };
+                        websocket.send("gomoku", message);
+                    },
+                    close: function () {
+                        $("#gomokuArea").html("");
+
+                        var message = {
+                            "type": "leave"
+                        };
+                        websocket.send("gomoku", message);
+                    },
                     handler: {
                         data: {
                             state: function (data) {
@@ -418,7 +443,14 @@
                                 self.createGame(data.opponent);
                                 $gameBoard = $("#gomokuArea .gameBoard");
                                 $.each(data.moves, function (index, move) {
-                                    // TODO: set pieces
+                                    var
+                                            side = "side" + move[0],
+                                            column = move[1],
+                                            row = move[2],
+                                            id = "pos_" + row + "_" + column;
+                                    $("#" + id)
+                                            .removeClass("free")
+                                            .addClass(side);
                                 });
 
                                 self.mySide = data.you;
@@ -455,12 +487,25 @@
                             },
                             gameOver: function (data) {
                                 var
-                                        $gameBoard = $("#gomokuArea .gameBoard");
-                                alert("Game over!");
+                                        $gameBoard = $("#gomokuArea .gameBoard"),
+                                        newGameResponse;
+                                if ("winner" in data && data.winner !== "") {
+                                    if (data.winner === user.session.name) {
+                                        alert("Game over! You won!");
+                                    } else {
+                                        alert("Game over! You lost!");
+                                    }
+                                } else {
+                                    alert("Game over! A tie!");
+                                }
                                 $gameBoard.removeClass("myTurn");
-                                // TODO: set message to lobby
-                                // TODO: prompt for continue
-                                // TODO: set message to lobby
+
+                                newGameResponse = confirm("Start a new game?");
+                                if (newGameResponse) {
+                                    self.newGame();
+                                } else {
+                                    self.close();
+                                }
                                 // TODO: set status on lobby
                             }
                         }
@@ -474,9 +519,12 @@
                     },
                     init: function () {
                         $(document)
+                                // TODO: listener to lobbymembers -- disable challenge button if none selected
                                 .on("click", "#challengeGomoku", function (event) {
                                     var challengee = $("#lobbyMembers").val();
-                                    self.challenge(challengee);
+                                    if (typeof challengee === "string" && challengee !== "") {
+                                        self.challenge(challengee);
+                                    }
                                 })
                                 .on("click.placePiece", "#gomokuArea .gameBoard.myTurn .free", function (event) {
                                     var
@@ -488,9 +536,7 @@
                                 });
                     },
                     onClose: function () {
-                        // TODO: implement
-                        // TODO: send message
-                        $("#gomokuArea").html("");
+                        self.close();
                     }
                 };
             })(),
@@ -502,10 +548,10 @@
                             var message = $.parseJSON(evt.data);
                             console.log("Received message: " + evt.data);
 
-                            if (message.type in self.handler.message) {
-                                self.handler.message[message.type](message);
-                            } else if (message.type in self.handler.data) {
-                                self.handler.data[message.type](message.data);
+                            if (message.context in self.handler.message) {
+                                self.handler.message[message.context](message);
+                            } else if (message.context in self.handler.data) {
+                                self.handler.data[message.context](message.data);
                             }
                         },
                         onClose: function () {
@@ -520,8 +566,8 @@
                          */
                         message: {
                             error: function (message) {
-                                if (message.type in self.handler.error) {
-                                    self.handler.error[message.type](message);
+                                if (message.context in self.handler.error) {
+                                    self.handler.error[message.context](message);
                                 } else {
                                     // TODO: framework
                                     alert("Received error: " + message.text);
@@ -566,11 +612,11 @@
                         }
                         self.socket = undefined;
                     },
-                    send: function (type, data) {
+                    send: function (context, data) {
                         var message, messageStr;
 
                         message = {
-                            "type": type,
+                            "context": context,
                             "data": data
                         };
                         messageStr = JSON.stringify(message);
