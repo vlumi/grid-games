@@ -6,7 +6,10 @@
 package fi.misaki.gomoku.server.gomoku;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -23,6 +26,7 @@ public class GomokuGameBoard implements Serializable {
     private final int winningLength;
     private final int[][] grid;
     private int turnsLeft;
+    private final List<GomokuGamePosition> winningPositions = Collections.synchronizedList(new ArrayList<>());
 
     public GomokuGameBoard() {
         this(DEFAULT_SIDE_LENGTH, DEFAULT_WINNING_LENGTH);
@@ -78,20 +82,33 @@ public class GomokuGameBoard implements Serializable {
      * @param turn
      * @return
      */
-    public boolean isWinningTurn(GomokuGameTurn turn) {
+    public boolean isWinningTurn(GomokuGamePosition turn) {
         if (turn == null) {
             return false;
         }
         int row = turn.getRow();
         int column = turn.getColumn();
-        GomokuSide side = turn.getSide();
 
         synchronized (this.grid) {
-            if (GomokuGameBoardChecker.isWinningPosition(this.grid, this.winningLength, column, row, side)) {
+            List<GomokuGamePosition> positions
+                    = GomokuGameBoardChecker.getWinningPositions(this.grid, this.winningLength, column, row);
+            if (!positions.isEmpty()) {
+                synchronized (this.winningPositions) {
+                    this.winningPositions.clear();
+                    this.winningPositions.addAll(positions);
+                }
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public List<GomokuGamePosition> getWinningPositions() {
+        return new ArrayList<>(this.winningPositions);
     }
 
     /**

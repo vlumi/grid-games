@@ -53,19 +53,21 @@
                     session: {
                         name: ""
                     },
-                    onMessageData: function (data) {
-                        if (data.type in self.handler.data) {
-                            self.handler.data[data.type](data);
-                        }
-                    },
-                    onClose: function () {
-                        self.logout();
-                    },
-                    onError: function (message) {
-                        alert("Login failed: " + message.message);
-                        self.enableLogin();
-                    },
                     init: function () {
+                        websocket.registerHandler("data", "user", function (data) {
+                            if (data.type in self.handler.data) {
+                                self.handler.data[data.type](data);
+                            }
+                        });
+                        websocket.registerHandler("close", "user", function () {
+                            self.logout();
+                        });
+                        websocket.registerHandler("error", "user", function (message) {
+                            // TODO: nicer message
+                            alert("Login failed: " + message.message);
+                            self.enableLogin();
+                        });
+
                         $(document)
                                 .on("click.login", "#login", function () {
                                     self.login();
@@ -273,7 +275,30 @@
 
                 };
                 return {
+                    sendPublicMessage: function (content) {
+                        var message = {
+                            type: "chatMessage",
+                            message: content,
+                            to: "",
+                            private: false
+                        };
+                        if (typeof message.message === "string" && message.message.length > 0) {
+                            websocket.send("lobby", message);
+                        }
+                    },
                     init: function () {
+                        websocket.registerHandler("data", "lobby", function (data) {
+                            if (data.type in self.handler.data) {
+                                self.handler.data[data.type](data);
+                            }
+                        });
+                        websocket.registerHandler("close", "lobby", function () {
+                            $("#lobbyArea").removeClass("active");
+                            self.ui.addStatusMessage("Disconnected.");
+                            self.clearMemberList();
+                            self.active = false;
+                        });
+
                         $(document)
                                 .on("click.member", "#lobbyMembers li:not(.self):not(.busy)", function (event) {
                                     $("#lobbyMembers li.selected").removeClass("selected");
@@ -290,28 +315,6 @@
                                             return false;
                                     }
                                 });
-                    },
-                    onMessageData: function (data) {
-                        if (data.type in self.handler.data) {
-                            self.handler.data[data.type](data);
-                        }
-                    },
-                    sendPublicMessage: function (content) {
-                        var message = {
-                            type: "chatMessage",
-                            message: content,
-                            to: "",
-                            private: false
-                        };
-                        if (typeof message.message === "string" && message.message.length > 0) {
-                            websocket.send("lobby", message);
-                        }
-                    },
-                    onClose: function () {
-                        $("#lobbyArea").removeClass("active");
-                        self.ui.addStatusMessage("Disconnected.");
-                        self.clearMemberList();
-                        self.active = false;
                     }
                 };
             })(),
@@ -490,16 +493,30 @@
                                         $gameBoard = $("#gomokuArea .gameBoard"),
                                         newGameResponse;
                                 if ("winner" in data && data.winner !== "") {
+                                    // TODO: to function
+                                    $.each(data.positions, function (index, position) {
+                                        var
+                                                side = position[0],
+                                                column = position[1],
+                                                row = position[2],
+                                                id = "pos_" + row + "_" + column;
+                                        $("#" + id)
+                                                .addClass("winner");
+                                    });
                                     if (data.winner === user.session.name) {
+                                        // TODO: nicer message
                                         alert("Game over! You won!");
                                     } else {
+                                        // TODO: nicer message
                                         alert("Game over! You lost!");
                                     }
                                 } else {
+                                    // TODO: nicer message
                                     alert("Game over! A tie!");
                                 }
                                 $gameBoard.removeClass("myTurn");
 
+                                // TODO: nicer message -- tie with game over message
                                 newGameResponse = confirm("Start a new game?");
                                 if (newGameResponse) {
                                     self.newGame();
@@ -512,12 +529,13 @@
                     }
                 };
                 return {
-                    onMessageData: function (data) {
-                        if (data.type in self.handler.data) {
-                            self.handler.data[data.type](data);
-                        }
-                    },
                     init: function () {
+                        websocket.registerHandler("data", "gomoku", function (data) {
+                            if (data.type in self.handler.data) {
+                                self.handler.data[data.type](data);
+                            }
+                        });
+
                         $(document)
                                 // TODO: listener to lobbymembers -- disable challenge button if none selected
                                 .on("click", "#challengeGomoku", function (event) {
@@ -550,15 +568,43 @@
 
                             if (message.context in self.handler.message) {
                                 self.handler.message[message.context](message);
-                            } else if (message.context in self.handler.data) {
-                                self.handler.data[message.context](message.data);
+                            } else if (message.context in self.eventHandlers.data) {
+                                self.eventHandlers.data[message.context](message.data);
                             }
                         },
                         onClose: function () {
-                            $.each(self.handler.close, function (index, handler) {
+                            $.each(self.eventHandlers.close, function (index, handler) {
                                 handler();
                             });
                         }
+                    },
+                    /**
+                     * Registered handlers for websocket events. Each
+                     * handler should be registered through the public
+                     * registerHandler method.
+                     *
+                     * Each event may have one handler for each context,
+                     * a function with the signature defined below.
+                     */
+                    eventHandlers: {
+                        /**
+                         * Normal data, received from the server.
+                         *
+                         * function(data)
+                         */
+                        data: {},
+                        /**
+                         * Connection close event.
+                         *
+                         * function()
+                         */
+                        close: {},
+                        /**
+                         * Error received from the server.
+                         *
+                         * function(message)
+                         */
+                        error: {}
                     },
                     handler: {
                         /**
@@ -566,31 +612,16 @@
                          */
                         message: {
                             error: function (message) {
-                                if (message.context in self.handler.error) {
-                                    self.handler.error[message.context](message);
+                                if (message.context in self.eventHandlers.error) {
+                                    self.eventHandlers.error[message.context](message);
                                 } else {
                                     // TODO: framework
+                                    // TODO: nicer message
                                     alert("Received error: " + message.text);
                                 }
                                 // TODO:
                             }
                         },
-                        /**
-                         * Handlers accepting the data part of the received message.
-                         */
-                        data: {
-                            user: user.onMessageData,
-                            lobby: lobby.onMessageData,
-                            gomoku: gomoku.onMessageData
-                        },
-                        close: {
-                            user: user.onClose,
-                            lobby: lobby.onClose,
-                            gomoku: gomoku.onClose
-                        },
-                        error: {
-                            user: user.onError
-                        }
                     }
                 };
                 return {
@@ -623,6 +654,9 @@
 
                         console.log("Send message: " + messageStr);
                         self.socket.send(messageStr);
+                    },
+                    registerHandler: function (event, context, handler) {
+                        self.eventHandlers[event][context] = handler;
                     }
                 };
             })(),

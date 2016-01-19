@@ -6,6 +6,7 @@ import fi.misaki.gomoku.protocol.key.MessageContext;
 import fi.misaki.gomoku.server.user.User;
 import fi.misaki.gomoku.server.user.UserManager;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -240,7 +241,8 @@ public class GomokuManager implements Serializable {
         PushMessage message = createPushMessageTemplate(GomokuMessageDataType.GAME_OVER);
         if (winner != null) {
             message.getData()
-                    .add("winner", game.getWinner().getName());
+                    .add("winner", game.getWinner().getName())
+                    .add("positions", game.getWinningPositionsAsJsonArrayBuilder());
         }
         userManager.sendMessage(game.getPlayers(), message);
     }
@@ -269,7 +271,7 @@ public class GomokuManager implements Serializable {
      */
     private PushMessage createPlacePieceMessage(GomokuGame game) {
         PushMessage message = createPushMessageTemplate(GomokuMessageDataType.PLACE_PIECE);
-        GomokuGameTurn lastTurn = game.getLastTurn();
+        GomokuGamePosition lastTurn = game.getLastTurn();
         message.getData()
                 .add("turn", game.getCurrentTurn().getValue())
                 .add("column", lastTurn.getColumn())

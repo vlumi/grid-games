@@ -23,7 +23,7 @@ public class GomokuGame {
 
     private final GomokuGameBoard board;
 
-    private final Deque<GomokuGameTurn> turnHistory = new ConcurrentLinkedDeque<>();
+    private final Deque<GomokuGamePosition> turnHistory = new ConcurrentLinkedDeque<>();
     private boolean gameOver = false;
 
     private User playerWhite;
@@ -82,36 +82,38 @@ public class GomokuGame {
         if (!this.running) {
             return false;
         }
-        boolean turnSuccessful = false;
-        User currentPlayer = null;
-        User nextPlayer = null;
-        switch (this.currentTurn) {
-            case WHITE:
-                currentPlayer = this.playerWhite;
-                nextPlayer = this.playerBlack;
-                if (this.board.placeWhitePiece(column, row)) {
-                    turnSuccessful = true;
-                }
-                break;
-            case BLACK:
-                currentPlayer = this.playerBlack;
-                nextPlayer = this.playerWhite;
-                if (this.board.placeBlackPiece(column, row)) {
-                    turnSuccessful = true;
-                }
-                break;
-        }
-
-        if (turnSuccessful) {
-            recordTurn(column, row, this.currentTurn);
-            if (this.gameOver) {
-                this.winner = currentPlayer;
-                this.loser = nextPlayer;
-            } else {
-                this.currentTurn = this.currentTurn.getOther();
+        synchronized (this.board) {
+            boolean turnSuccessful = false;
+            User currentPlayer = null;
+            User nextPlayer = null;
+            switch (this.currentTurn) {
+                case WHITE:
+                    currentPlayer = this.playerWhite;
+                    nextPlayer = this.playerBlack;
+                    if (this.board.placeWhitePiece(column, row)) {
+                        turnSuccessful = true;
+                    }
+                    break;
+                case BLACK:
+                    currentPlayer = this.playerBlack;
+                    nextPlayer = this.playerWhite;
+                    if (this.board.placeBlackPiece(column, row)) {
+                        turnSuccessful = true;
+                    }
+                    break;
             }
+
+            if (turnSuccessful) {
+                recordTurn(column, row, this.currentTurn);
+                if (this.gameOver) {
+                    this.winner = currentPlayer;
+                    this.loser = nextPlayer;
+                } else {
+                    this.currentTurn = this.currentTurn.getOther();
+                }
+            }
+            return turnSuccessful;
         }
-        return turnSuccessful;
     }
 
     public void leave(User user) {
@@ -183,13 +185,13 @@ public class GomokuGame {
         }
     }
 
-    public List<GomokuGameTurn> getTurnHistory() {
+    public List<GomokuGamePosition> getTurnHistory() {
         synchronized (this.turnHistory) {
             return this.turnHistory.stream().collect(Collectors.toList());
         }
     }
 
-    public GomokuGameTurn getLastTurn() {
+    public GomokuGamePosition getLastTurn() {
         synchronized (this.turnHistory) {
             return this.turnHistory.peekLast();
         }
@@ -211,6 +213,33 @@ public class GomokuGame {
     }
 
     /**
+     *
+     * @return
+     */
+    public List<GomokuGamePosition> getWinningPositions() {
+        synchronized (this.board) {
+            return this.board.getWinningPositions();
+        }
+    }
+
+    /**
+     *
+     * @return
+     */
+    public JsonArrayBuilder getWinningPositionsAsJsonArrayBuilder() {
+        synchronized (this.board) {
+            JsonArrayBuilder positions = Json.createArrayBuilder();
+            this.board.getWinningPositions().stream()
+                    .map(position -> Json.createArrayBuilder()
+                            .add(position.getSide().getValue())
+                            .add(position.getColumn())
+                            .add(position.getRow()))
+                    .forEachOrdered(position -> positions.add(position));
+            return positions;
+        }
+    }
+
+    /**
      * Record the move made.
      *
      * @param column
@@ -218,15 +247,21 @@ public class GomokuGame {
      * @param side
      */
     private void recordTurn(int column, int row, GomokuSide side) {
-        GomokuGameTurn move = new GomokuGameTurn(column, row, side);
+        GomokuGamePosition move = new GomokuGamePosition(column, row, side);
         synchronized (this.turnHistory) {
             this.turnHistory.add(move);
         }
         if (board.isWinningTurn(move)) {
+
             gameOver(side);
         } else if (!this.gameOver && !board.isWinnable()) {
             gameOver(GomokuSide.UNKNOWN);
         }
+    }
+
+    private void gameOver(GomokuSide winner, List<GomokuGamePosition> winningPositions) {
+        gameOver(winner);
+
     }
 
     private void gameOver(GomokuSide winner) {
