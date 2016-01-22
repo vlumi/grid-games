@@ -3,8 +3,8 @@ package fi.misaki.gomoku.server.lobby;
 import fi.misaki.gomoku.protocol.Message;
 import fi.misaki.gomoku.protocol.key.MessageContext;
 import fi.misaki.gomoku.protocol.PushMessage;
-import fi.misaki.gomoku.server.user.User;
-import fi.misaki.gomoku.server.user.UserManager;
+import fi.misaki.gomoku.server.player.Player;
+import fi.misaki.gomoku.server.player.PlayerManager;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.logging.Level;
@@ -27,43 +27,43 @@ public class LobbyManager implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(LobbyManager.class.getName());
 
     @Inject
-    private UserManager userManager;
+    private PlayerManager playerManager;
 
-    public void handleChatMessageRequest(User user, JsonObject data) {
+    public void handleChatMessageRequest(Player player, JsonObject data) {
         String message = data.getString("message", "");
         String to = data.getString("to", "");
 
         LOGGER.log(Level.FINEST, "Lobby message to {0}: {1}", new String[]{to, message});
 
         if (to.isEmpty()) {
-            sendChatMessageToAll(user, message);
+            sendChatMessageToAll(player, message);
         } else {
             boolean isPrivate = data.getBoolean("private", false);
-            User toUser = userManager.getUserForName(to);
-            sendChatMessage(user, toUser, message, isPrivate);
+            Player toPlayer = playerManager.getPlayerForName(to);
+            sendChatMessage(player, toPlayer, message, isPrivate);
         }
     }
 
     /**
      *
-     * @param user
+     * @param player
      */
-    public void sendInitMessage(User user) {
+    public void sendInitMessage(Player player) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.INIT);
         message.getData()
-                .add("members", this.userManager.getMembersAsJsonArrayBuilder());
-        userManager.sendMessage(user, message);
+                .add("members", this.playerManager.getMembersAsJsonArrayBuilder());
+        playerManager.sendMessage(player, message);
     }
 
     /**
      * Send a join message to all open sessions.
      *
-     * @param user The user who joined.
+     * @param player The player who joined.
      */
-    public void sendJoinMessage(User user) {
+    public void sendJoinMessage(Player player) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.JOIN);
         message.getData()
-                .add("name", user.getName());
+                .add("name", player.getName());
 
         LOGGER.log(Level.FINEST, "LOBBY JOIN MESSAGE: {0}", message);
         sendMessageToAllSessions(message);
@@ -72,12 +72,12 @@ public class LobbyManager implements Serializable {
     /**
      * Send a part message to all open sessions.
      *
-     * @param user The user who left.
+     * @param player The player who left.
      */
-    public void sendPartMessage(User user) {
+    public void sendPartMessage(Player player) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.PART);
         message.getData()
-                .add("name", user.getName());
+                .add("name", player.getName());
 
         LOGGER.log(Level.FINEST, "LOBBY PART MESSAGE: {0}", message);
         sendMessageToAllSessions(message);
@@ -88,7 +88,7 @@ public class LobbyManager implements Serializable {
      * @param from
      * @param messageText
      */
-    public void sendChatMessageToAll(User from, String messageText) {
+    public void sendChatMessageToAll(Player from, String messageText) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.CHAT_MESSAGE);
         message.getData()
                 .add("from", from.getName())
@@ -105,7 +105,7 @@ public class LobbyManager implements Serializable {
      * @param messageText
      * @param isPrivate
      */
-    public void sendChatMessage(User from, User to, String messageText, boolean isPrivate) {
+    public void sendChatMessage(Player from, Player to, String messageText, boolean isPrivate) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.CHAT_MESSAGE);
         message.getData()
                 .add("from", from.getName())
@@ -115,24 +115,27 @@ public class LobbyManager implements Serializable {
 
         LOGGER.log(Level.FINEST, "LOBBY MESSAGE: {0}", message);
         if (isPrivate) {
-            final Set<User> targetUsers = Stream.of(from, to).collect(Collectors.toSet());
-            this.userManager.sendMessage(targetUsers, message);
+            final Set<Player> targetPlayers = Stream.of(from, to).collect(Collectors.toSet());
+            this.playerManager.sendMessage(targetPlayers, message);
         } else {
             sendMessageToAllSessions(message);
         }
     }
 
-    public void sendUserBusy(User user) {
+    public void sendPlayerBusy(Player player) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.STATUS);
         message.getData()
+                .add("name", player.getName())
                 .add("status", "busy");
-
+        this.sendMessageToAllSessions(message);
     }
 
-    public void sendUserFree(User user) {
+    public void sendPlayerFree(Player player) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.STATUS);
         message.getData()
+                .add("name", player.getName())
                 .add("status", "free");
+        this.sendMessageToAllSessions(message);
     }
 
     /**
@@ -153,7 +156,7 @@ public class LobbyManager implements Serializable {
      */
     private void sendMessageToAllSessions(Message message) {
         String messageString = message.toJsonObject().toString();
-        userManager.getAllSessions().forEach(session -> {
+        playerManager.getAllSessions().forEach(session -> {
             LOGGER.log(Level.FINEST, "send to session: {0}", session.getId());
             session.getAsyncRemote().sendText(messageString);
         });

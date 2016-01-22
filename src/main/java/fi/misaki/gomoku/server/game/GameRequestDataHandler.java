@@ -1,9 +1,9 @@
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.game;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.server.RequestDataHandler;
-import fi.misaki.gomoku.server.user.User;
-import fi.misaki.gomoku.server.user.UserManager;
+import fi.misaki.gomoku.server.player.Player;
+import fi.misaki.gomoku.server.player.PlayerManager;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -15,16 +15,16 @@ import javax.websocket.Session;
  * @author vlumi
  */
 @Stateless
-public class GomokuRequestDataHandler extends RequestDataHandler {
+public class GameRequestDataHandler extends RequestDataHandler {
 
     private static final long serialVersionUID = 7531558038666358138L;
 
-    private static final Logger LOGGER = Logger.getLogger(GomokuRequestDataHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GameRequestDataHandler.class.getName());
 
     @Inject
-    private GomokuManager gomokuManager;
+    private GameManager gameManager;
     @Inject
-    private UserManager userManager;
+    private PlayerManager userManager;
 
     /**
      *
@@ -35,30 +35,30 @@ public class GomokuRequestDataHandler extends RequestDataHandler {
     @Override
     public void handleRequestData(Session session, JsonObject data) throws InvalidRequestException {
 
-        User user = userManager.getUserForSessionId(session.getId());
+        Player player = userManager.getPlayerForSessionId(session.getId());
 
         // TODO: parse the input
-        switch (GomokuMessageDataType.ofCode(data.getString("type", ""))) {
+        switch (GameMessageDataType.ofCode(data.getString("type", ""))) {
             case CHALLENGE:
-                gomokuManager.handleChallengeRequest(user, data);
+                gameManager.handleChallengeRequest(player, data);
                 break;
             case CANCEL_CHALLENGE:
-                gomokuManager.handleCancelChallengeRequest(user, data);
+                gameManager.handleCancelChallengeRequest(player, data);
                 break;
             case ACCEPT_CHALLENGE:
-                gomokuManager.handleAcceptChallengeRequest(user, data);
+                gameManager.handleAcceptChallengeRequest(player, data);
                 break;
             case REJECT_CHALLENGE:
-                gomokuManager.handleRejectChallengeRequest(user, data);
+                gameManager.handleRejectChallengeRequest(player, data);
                 break;
             case PLACE_PIECE:
-                gomokuManager.handlePlacePieceRequest(user, data);
+                gameManager.handlePlacePieceRequest(player, data);
                 break;
             case NEW_GAME:
-                gomokuManager.handleNewGame(user, data);
+                gameManager.handleNewGame(player, data);
                 break;
             case LEAVE:
-                gomokuManager.handleLeaveRequest(user, data);
+                gameManager.handleLeaveRequest(player, data);
                 break;
             case GAME_OVER:
             default:

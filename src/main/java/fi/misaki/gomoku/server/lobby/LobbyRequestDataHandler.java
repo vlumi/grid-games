@@ -2,8 +2,8 @@ package fi.misaki.gomoku.server.lobby;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.server.RequestDataHandler;
-import fi.misaki.gomoku.server.user.User;
-import fi.misaki.gomoku.server.user.UserManager;
+import fi.misaki.gomoku.server.player.Player;
+import fi.misaki.gomoku.server.player.PlayerManager;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -22,7 +22,7 @@ public class LobbyRequestDataHandler extends RequestDataHandler {
     private static final Logger LOGGER = Logger.getLogger(LobbyRequestDataHandler.class.getName());
 
     @Inject
-    private UserManager userManager;
+    private PlayerManager playerManager;
     @Inject
     private LobbyManager lobbyManager;
 
@@ -35,11 +35,11 @@ public class LobbyRequestDataHandler extends RequestDataHandler {
     @Override
     public void handleRequestData(Session session, JsonObject data) throws InvalidRequestException {
 
-        User user = userManager.getUserForSessionId(session.getId());
+        Player player = playerManager.getPlayerForSessionId(session.getId());
 
         switch (LobbyMessageDataType.ofCode(data.getString("type", ""))) {
             case CHAT_MESSAGE:
-                lobbyManager.handleChatMessageRequest(user, data);
+                lobbyManager.handleChatMessageRequest(player, data);
                 break;
             default:
                 throw new InvalidRequestException("Invalid lobby request type.");

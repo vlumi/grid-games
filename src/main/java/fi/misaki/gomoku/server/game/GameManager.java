@@ -1,12 +1,11 @@
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.game;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.protocol.PushMessage;
 import fi.misaki.gomoku.protocol.key.MessageContext;
-import fi.misaki.gomoku.server.user.User;
-import fi.misaki.gomoku.server.user.UserManager;
+import fi.misaki.gomoku.server.player.Player;
+import fi.misaki.gomoku.server.player.PlayerManager;
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,16 +20,16 @@ import javax.websocket.Session;
  * @author vlumi
  */
 @Stateless
-public class GomokuManager implements Serializable {
+public class GameManager implements Serializable {
 
     private static final long serialVersionUID = -6450837604774940779L;
 
-    private static final Logger LOGGER = Logger.getLogger(GomokuManager.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GameManager.class.getName());
 
     @Inject
-    private UserManager userManager;
+    private PlayerManager playerManager;
 
-    private final Map<User, GomokuGame> games = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Player, Game> games = Collections.synchronizedMap(new HashMap<>());
 
     /**
      *
@@ -38,25 +37,35 @@ public class GomokuManager implements Serializable {
      * @param data
      * @throws fi.misaki.gomoku.protocol.InvalidRequestException
      */
-    public void handleChallengeRequest(User challenger, JsonObject data)
+    public void handleChallengeRequest(Player challenger, JsonObject data)
             throws InvalidRequestException {
-        User challengee = userManager.getUserForName(data.getString("to", ""));
+        Player challengee = playerManager.getPlayerForName(data.getString("to", ""));
+        GameVariant variant = GameVariant.ofValue(data.getString("variant"));
 
         if (challengee == null) {
             throw new InvalidRequestException("Challengee not found.");
         }
+        if (variant == GameVariant.UNKNOWN) {
+            throw new InvalidRequestException("Unknown variant.");
+        }
 
-        GomokuGame game = new GomokuGame();
-        game.addPlayer(challenger);
-        this.games.put(challenger, game);
+        this.playerManager.setBusy(challenger, challengee);
+        try {
+            Game game = new Game(variant);
+            game.addPlayer(challenger);
+            this.games.put(challenger, game);
 
-        PushMessage message = createPushMessageTemplate(GomokuMessageDataType.CHALLENGE);
-        message.getData()
-                .add("from", challenger.getName())
-                .add("to", challengee.getName());
+            PushMessage message = createPushMessageTemplate(GameMessageDataType.CHALLENGE);
+            message.getData()
+                    .add("from", challenger.getName())
+                    .add("to", challengee.getName())
+                    .add("variant", variant.getValue());
 
-        userManager.sendMessage(challengee, message);
-        // TODO: send user state -- busy
+            this.playerManager.sendMessage(challengee, message);
+        } catch (Exception e) {
+            this.playerManager.setFree(challenger, challengee);
+            throw e;
+        }
     }
 
     /**
@@ -65,20 +74,22 @@ public class GomokuManager implements Serializable {
      * @param data
      * @throws fi.misaki.gomoku.protocol.InvalidRequestException
      */
-    public void handleCancelChallengeRequest(User challenger, JsonObject data)
+    public void handleCancelChallengeRequest(Player challenger, JsonObject data)
             throws InvalidRequestException {
-        User challengee = userManager.getUserForName(data.getString("to", ""));
+        Player challengee = this.playerManager.getPlayerForName(data.getString("to", ""));
+
+        this.playerManager.setFree(challenger, challengee);
 
         synchronized (this.games) {
             this.games.remove(challenger);
         }
 
-        PushMessage message = createPushMessageTemplate(GomokuMessageDataType.CANCEL_CHALLENGE);
+        PushMessage message = createPushMessageTemplate(GameMessageDataType.CANCEL_CHALLENGE);
         message.getData()
                 .add("from", challenger.getName())
                 .add("to", challengee.getName());
 
-        userManager.sendMessage(challengee, message);
+        playerManager.sendMessage(challengee, message);
     }
 
     /**
@@ -87,12 +98,12 @@ public class GomokuManager implements Serializable {
      * @param data
      * @throws fi.misaki.gomoku.protocol.InvalidRequestException
      */
-    public void handleAcceptChallengeRequest(User challengee, JsonObject data)
+    public void handleAcceptChallengeRequest(Player challengee, JsonObject data)
             throws InvalidRequestException {
-        User challenger = userManager.getUserForName(data.getString("to", ""));
+        Player challenger = playerManager.getPlayerForName(data.getString("to", ""));
 
         synchronized (this.games) {
-            GomokuGame game = this.games.get(challenger);
+            Game game = this.games.get(challenger);
             if (!game.addPlayer(challengee)) {
                 // TODO: error
                 return;
@@ -100,7 +111,6 @@ public class GomokuManager implements Serializable {
             this.games.put(challengee, game);
             game.start();
             sendStateToPlayers(game);
-            // TODO: send user state -- busy
         }
     }
 
@@ -110,20 +120,22 @@ public class GomokuManager implements Serializable {
      * @param data
      * @throws fi.misaki.gomoku.protocol.InvalidRequestException
      */
-    public void handleRejectChallengeRequest(User challengee, JsonObject data)
+    public void handleRejectChallengeRequest(Player challengee, JsonObject data)
             throws InvalidRequestException {
-        User challenger = userManager.getUserForName(data.getString("to", ""));
+        Player challenger = playerManager.getPlayerForName(data.getString("to", ""));
+
+        this.playerManager.setFree(challenger, challengee);
 
         synchronized (this.games) {
             this.games.remove(challenger);
         }
 
-        PushMessage message = createPushMessageTemplate(GomokuMessageDataType.REJECT_CHALLENGE);
+        PushMessage message = createPushMessageTemplate(GameMessageDataType.REJECT_CHALLENGE);
         message.getData()
                 .add("from", challenger.getName())
                 .add("to", challengee.getName());
 
-        userManager.sendMessage(challenger, message);
+        playerManager.sendMessage(challenger, message);
     }
 
     /**
@@ -132,13 +144,13 @@ public class GomokuManager implements Serializable {
      * @param data
      * @throws fi.misaki.gomoku.protocol.InvalidRequestException
      */
-    public void handlePlacePieceRequest(User player, JsonObject data)
+    public void handlePlacePieceRequest(Player player, JsonObject data)
             throws InvalidRequestException {
-        GomokuGame game = this.games.get(player);
+        Game game = this.games.get(player);
         if (game == null) {
             throw new InvalidRequestException("No game found.");
         }
-        GomokuSide side = game.getSide(player);
+        GameSide side = game.getSide(player);
         if (side != game.getCurrentTurn()) {
             throw new InvalidRequestException("Not your turn.");
         }
@@ -161,9 +173,9 @@ public class GomokuManager implements Serializable {
      * @param player
      * @param data
      */
-    public void handleNewGame(User player, JsonObject data) {
+    public void handleNewGame(Player player, JsonObject data) {
         synchronized (this.games) {
-            GomokuGame game = this.games.get(player);
+            Game game = this.games.get(player);
             game.start();
             if (game.isRunning()) {
                 sendStateToPlayers(game);
@@ -176,18 +188,18 @@ public class GomokuManager implements Serializable {
      * @param player
      * @param data
      */
-    public void handleLeaveRequest(User player, JsonObject data) {
+    public void handleLeaveRequest(Player player, JsonObject data) {
         synchronized (this.games) {
-            GomokuGame game = this.games.get(player);
+            Game game = this.games.get(player);
+            playerManager.setFree(game.getPlayers().toArray(new Player[0]));
             game.leave(player);
             this.games.remove(player);
-            // TODO: send user state -- free, both users
         }
     }
 
-    public GomokuGame findGame(User player) {
+    public Game findGame(Player player) {
         synchronized (this.games) {
-            GomokuGame game = this.games.get(player);
+            Game game = this.games.get(player);
             return game;
         }
     }
@@ -196,7 +208,7 @@ public class GomokuManager implements Serializable {
      *
      * @param game
      */
-    public void sendStateToPlayers(GomokuGame game) {
+    public void sendStateToPlayers(Game game) {
         sendState(game, game.getPlayerWhite());
         sendState(game, game.getPlayerBlack());
     }
@@ -206,9 +218,9 @@ public class GomokuManager implements Serializable {
      * @param game
      * @param player
      */
-    public void sendState(GomokuGame game, User player) {
+    public void sendState(Game game, Player player) {
         PushMessage message = createStateMessage(game, game.getSide(player));
-        userManager.sendMessage(player, message);
+        playerManager.sendMessage(player, message);
     }
 
     /**
@@ -216,35 +228,35 @@ public class GomokuManager implements Serializable {
      * @param game
      * @param session
      */
-    public void sendStateToSession(GomokuGame game, Session session) {
-        User player = this.userManager.getUserForSessionId(session.getId());
+    public void sendStateToSession(Game game, Session session) {
+        Player player = this.playerManager.getPlayerForSessionId(session.getId());
         PushMessage message = createStateMessage(game, game.getSide(player));
-        userManager.sendMessage(session, message);
+        playerManager.sendMessage(session, message);
     }
 
     /**
      *
      * @param game
      */
-    public void sendPlacePieceToPlayers(GomokuGame game) {
+    public void sendPlacePieceToPlayers(Game game) {
         PushMessage message = createPlacePieceMessage(game);
-        userManager.sendMessage(game.getPlayers(), message);
+        playerManager.sendMessage(game.getPlayers(), message);
     }
 
     /**
      *
      * @param game
      */
-    public void sendGameoverToPlayers(GomokuGame game) {
+    public void sendGameoverToPlayers(Game game) {
         // TODO: implement
-        User winner = game.getWinner();
-        PushMessage message = createPushMessageTemplate(GomokuMessageDataType.GAME_OVER);
+        Player winner = game.getWinner();
+        PushMessage message = createPushMessageTemplate(GameMessageDataType.GAME_OVER);
         if (winner != null) {
             message.getData()
                     .add("winner", game.getWinner().getName())
                     .add("positions", game.getWinningPositionsAsJsonArrayBuilder());
         }
-        userManager.sendMessage(game.getPlayers(), message);
+        playerManager.sendMessage(game.getPlayers(), message);
     }
 
     /**
@@ -253,13 +265,14 @@ public class GomokuManager implements Serializable {
      * @param side
      * @return
      */
-    private PushMessage createStateMessage(GomokuGame game, GomokuSide side) {
-        PushMessage message = createPushMessageTemplate(GomokuMessageDataType.STATE);
+    private PushMessage createStateMessage(Game game, GameSide side) {
+        PushMessage message = createPushMessageTemplate(GameMessageDataType.STATE);
         message.getData()
                 .add("opponent", game.getPlayer(side.getOther()).getName())
                 .add("you", side.getValue())
                 .add("turn", game.getCurrentTurn().getValue())
-                .add("moves", game.getTurnHistoryAsJsonArrayBuilder());
+                .add("moves", game.getTurnHistoryAsJsonArrayBuilder())
+                .add("variant", game.getVariant().getValue());
         return message;
     }
 
@@ -269,9 +282,9 @@ public class GomokuManager implements Serializable {
      * @param side
      * @return
      */
-    private PushMessage createPlacePieceMessage(GomokuGame game) {
-        PushMessage message = createPushMessageTemplate(GomokuMessageDataType.PLACE_PIECE);
-        GomokuGamePosition lastTurn = game.getLastTurn();
+    private PushMessage createPlacePieceMessage(Game game) {
+        PushMessage message = createPushMessageTemplate(GameMessageDataType.PLACE_PIECE);
+        GameBoardPosition lastTurn = game.getLastMove();
         message.getData()
                 .add("turn", game.getCurrentTurn().getValue())
                 .add("column", lastTurn.getColumn())
@@ -285,8 +298,8 @@ public class GomokuManager implements Serializable {
      * @param type
      * @return
      */
-    private PushMessage createPushMessageTemplate(GomokuMessageDataType type) {
-        PushMessage message = new PushMessage(MessageContext.GOMOKU);
+    private PushMessage createPushMessageTemplate(GameMessageDataType type) {
+        PushMessage message = new PushMessage(MessageContext.GAME);
         message.getData()
                 .add("type", type.getCode());
         return message;

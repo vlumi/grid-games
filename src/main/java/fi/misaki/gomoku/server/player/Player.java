@@ -1,4 +1,4 @@
-package fi.misaki.gomoku.server.user;
+package fi.misaki.gomoku.server.player;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -11,23 +11,27 @@ import javax.websocket.Session;
  *
  * @author vlumi
  */
-public class User implements Serializable {
+public class Player implements Serializable {
 
     private static final long serialVersionUID = -3454841459380520035L;
 
-    private static final Logger LOGGER = Logger.getLogger(User.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(Player.class.getName());
 
     /**
-     * The name of the user, unique across all users.
+     * The name of the player, unique across all players.
      */
     private String name = "";
     /**
-     * (Optional) hashed password, to allow the same user to be connected from
+     * (Optional) hashed password, to allow the same player to be connected from
      * multiple simultaneous clients.
      */
     private String passwordHash = "";
     /**
-     * All active sessions for the user, when the user is connected from
+     *
+     */
+    private PlayerStatus status = PlayerStatus.FREE;
+    /**
+     * All active sessions for the player, when the player is connected from
      * multiple clients simultaneously.
      */
     private final Set<Session> sessions = Collections.synchronizedSet(new HashSet<>());
@@ -48,10 +52,26 @@ public class User implements Serializable {
         this.passwordHash = passwordHash;
     }
 
+    public PlayerStatus getStatus() {
+        return status;
+    }
+
+    public boolean isBusy() {
+        return this.status == PlayerStatus.BUSY;
+    }
+
+    public boolean isFree() {
+        return this.status == PlayerStatus.FREE;
+    }
+
+    public void setStatus(PlayerStatus status) {
+        this.status = status;
+    }
+
     public Set<Session> getSessions() {
         return sessions;
     }
-
+    
     public void addSession(Session session) {
         synchronized (this.sessions) {
             this.sessions.add(session);

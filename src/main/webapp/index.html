@@ -1,39 +1,78 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Start Page</title>
-        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-        <script language="javascript" type="text/javascript" src="/gomoku-websocket/static/js/gomoku.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
         <style type="text/css">
-            #lobbyMembers {
+            #loginLayer {
+                width: 100%;
+                height: 100%;
+                z-index: 2;
+                background: white;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            #loginArea {
+                width: 400px;
+                margin-left: auto;
+                margin-right: auto; 
+                z-index: 3;
+            }
+            #main {
+                width: 100%;
+            }
+            h1 {
+                width: 100%;
+                text-align: center;
+            }
+            #challengeArea {
+                text-align: center;
+                width: 700px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            #memberListArea {
+                height: 100%;
+            }
+            #memberList {
                 padding: 0;
                 margin: 0;
                 border: solid black 1px;
                 width: 200px;
-                height: 200px;
+                height: 100%;
                 overflow: auto;
             }
-            #lobbyMembers li {
+            #memberList li {
                 list-style-type: none;
                 padding: 0 1em;
                 margin: 0;
                 color: forestgreen;
             }
-            #lobbyMembers .selected {
+            #memberList .selected {
                 background-color: gold;
                 color: darkgreen;
             }
-            #lobbyMembers .self {
+            #memberList .self {
                 color: darkslategrey;
             }
-            #lobbyMembers .busy {
+            #memberList .busy {
                 color: coral;
+            }
+            #lobbyArea {
+                width: 700px;
+                margin-left: auto;
+                margin-right: auto;
             }
             #lobby {
                 padding: 0;
                 margin: 0;
                 border: solid black 1px;
-                width: 500px;
+                width: 100%;
                 height: 300px;
                 overflow: scroll;
             }
@@ -50,7 +89,7 @@
                 left: 0px;
                 top: 0px;
             }
-            #lobby .user {
+            #lobby .player {
                 position: absolute;
                 left: 70px;
                 top: 0px;
@@ -69,103 +108,159 @@
             #lobby .private {
                 color: darkred;
             }
-            #gomokuArea .gameBoard {
+            #gameArea {
+                text-align: center;
+                width: 700px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            #gameArea .gameBoard {
                 border-collapse: collapse;
                 background-color: gold;
+                margin-left: auto;
+                margin-right: auto;
             }
-            #gomokuArea .gameBoard .free {
+            #gameArea .gameBoard th {
+                font-weight: bold;
+                text-decoration: none;
+                width: 30px;
+                height: 30px;
+                text-align: center;
+                vertical-align: middle;
+            }
+            #gameArea .gameBoard .free {
                 background: none;
             }
-            #gomokuArea .gameBoard .winner {
+            #gameArea .gameBoard .winner {
                 background-color: greenyellow;
             }
-            #gomokuArea .gameBoard.size30 td {
+            #gameArea .gameBoard.size30 td {
                 width: 30px;
                 height: 30px;
                 border: 0;
                 padding: 0;
             }
-            #gomokuArea .gameBoard.size30 td div {
+            #gameArea .gameBoard.size30 td div {
                 width: 30px;
                 height: 30px;
                 border: 0;
                 padding: 0;
             }
-            #gomokuArea .gameBoard.size30.myTurn.side1 .free:hover {
+            #gameArea .gameBoard.size30.myTurn.side1 .free:hover {
                 background-image:  url("static/img/30/piece_1.png")
             }
-            #gomokuArea .gameBoard.size30.myTurn.side2 .free:hover {
+            #gameArea .gameBoard.size30.myTurn.side2 .free:hover {
                 background-image:  url("static/img/30/piece_2.png")
             }
-            #gomokuArea .gameBoard.size30 .side1,
-            #gomokuArea .gameBoard.size30 .side1:hover {
+            #gameArea .gameBoard.size30 .side1,
+            #gameArea .gameBoard.size30 .side1:hover {
                 background-image: url("static/img/30/piece_1.png")
             }
-            #gomokuArea .gameBoard.size30 .side2,
-            #gomokuArea .gameBoard.size30 .side2:hover {
+            #gameArea .gameBoard.size30 .side2,
+            #gameArea .gameBoard.size30 .side2:hover {
                 background-image: url("static/img/30/piece_2.png")
             }
-            #gomokuArea .gameBoard.size30 .top.left {
+            #gameArea .gameBoard.size30 .top .left {
                 background-image: url("static/img/30/bg_top_left.png")
             }
-            #gomokuArea .gameBoard.size30 .top.center {
+            #gameArea .gameBoard.size30 .top .center {
                 background-image: url("static/img/30/bg_top_center.png")
             }
-            #gomokuArea .gameBoard.size30 .top.right {
+            #gameArea .gameBoard.size30 .top .right {
                 background-image: url("static/img/30/bg_top_right.png")
             }
-            #gomokuArea .gameBoard.size30 .middle.left {
+            #gameArea .gameBoard.size30 .middle .left {
                 background-image: url("static/img/30/bg_middle_left.png")
             }
-            #gomokuArea .gameBoard.size30 .middle.center {
+            #gameArea .gameBoard.size30 .middle .center {
                 background-image: url("static/img/30/bg_middle_center.png")
             }
-            #gomokuArea .gameBoard.size30 .middle.right {
+            #gameArea .gameBoard.size30 .middle .right {
                 background-image: url("static/img/30/bg_middle_right.png")
             }
-            #gomokuArea .gameBoard.size30 .bottom.left {
+            #gameArea .gameBoard.size30 .bottom .left {
                 background-image: url("static/img/30/bg_bottom_left.png")
             }
-            #gomokuArea .gameBoard.size30 .bottom.center {
+            #gameArea .gameBoard.size30 .bottom .center {
                 background-image: url("static/img/30/bg_bottom_center.png")
             }
-            #gomokuArea .gameBoard.size30 .bottom.right {
+            #gameArea .gameBoard.size30 .bottom .right {
                 background-image: url("static/img/30/bg_bottom_right.png")
             }
+
+            #gameArea .gameBoard.size128 td {
+                width: 128px;
+                height: 128px;
+                border: solid black 1px;
+                padding: 0;
+            }
+            #gameArea .gameBoard.size128 td div {
+                width: 128px;
+                height: 128px;
+                border: 0;
+                padding: 0;
+            }
+            #gameArea .gameBoard.size128.myTurn.side1 .free:hover {
+                background-image:  url("static/img/128/piece_x.png")
+            }
+            #gameArea .gameBoard.size128.myTurn.side2 .free:hover {
+                background-image:  url("static/img/128/piece_o.png")
+            }
+            #gameArea .gameBoard.size128 .side1,
+            #gameArea .gameBoard.size128 .side1:hover {
+                background-image: url("static/img/128/piece_x.png")
+            }
+            #gameArea .gameBoard.size128 .side2,
+            #gameArea .gameBoard.size128 .side2:hover {
+                background-image: url("static/img/128/piece_o.png")
+            }
         </style>
+
     </head>
     <body>
-        <h1>Gomoku</h1>
-        <form onsubmit="return false;">
-            <span id="authArea">
-                <span id="loginArea">
-                    <input id="url" type="text" placeholder="url" value="ws://localhost:8080/gomoku-websocket/gomoku">
-                    <input id="name" type="text" placeholder="name" maxlength="10">
-                    <input id="password" type="password" placeholder="password">
-                    <input type="submit" id="login" value="Login">
+        <form id="loginForm" onsubmit="return false;">
+            <div id="loginLayer">
+                <div id="loginArea">
+                    <h2>Please login</h2>
+                    <input id="url" class="form-control" type="text" placeholder="url" value="ws://localhost:8080/gomoku-websocket/game">
+                    <input id="name" class="form-control" type="text" placeholder="name" maxlength="10">
+                    <input id="password" class="form-control" type="password" placeholder="password">
+                    <button id="login" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+                    <span id="logoutArea">
+                        <button id="logout" class="btn btn-lg btn-primary btn-block" type="submit">Logout</button>
+                    </span>
+                </div>
+            </div>
+        </form>
+
+        <div id="main">
+            <h1>Gomoku</h1>
+            <div id="challengeArea">
+                <span id="memberListArea">
+                    <span id="memberName"></span>
+                    <select id="memberList" size="1"></select>
+                    <select id="variantList" size="1"></select>
+                    <input type="submit" id="challengeGame" value="Challenge!">
                 </span>
-                <span id="logoutArea">
-                    <input type="submit" id="logout" value="Logout" disabled>
-                </span>
-            </span>
-            <div id="gomokuArea">
+            </div>
+            <div id="gameArea">
             </div>
             <div id="lobbyArea">
-                <div id="lobbyMembersArea" style="float:left">
-                    <select id="lobbyMembers" size="10"></select>
-                </div>
-                <div id="lobbyMessageArea" style="float:left">
-                    <div id="lobbySendArea">
+                <div id="lobbySendArea">
+                    <form id="lobbyForm" onsubmit="return false;">
                         <input type="text" id="lobbyMessage" maxlength="160">
                         <input type="checkbox" id="lobbyPrivateMessage"/>
                         <label for="lobbyPrivateMessage">private</label>
                         <input type="submit" id="sendLobbyMessage" value="Send">
-                        <input type="submit" id="challengeGomoku" value="Gomoku!">
-                    </div>
-                    <div id="lobby">
-                    </div>
+                    </form>
+                </div>
+                <div id="lobby">
                 </div>
             </div>
-        </form>
+        </div>
+
+        <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+        <script language="javascript" type="text/javascript" src="/gomoku-websocket/static/js/game.js"></script>
     </body>
 </html>

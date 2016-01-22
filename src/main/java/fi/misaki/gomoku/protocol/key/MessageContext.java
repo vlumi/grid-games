@@ -7,9 +7,9 @@ import java.util.Arrays;
  * @author vlumi
  */
 public enum MessageContext {
-    USER("user"),
+    PLAYER("player"),
     LOBBY("lobby"),
-    GOMOKU("gomoku"),
+    GAME("game"),
     ERROR("error"),
     UNKNOWN("");
 

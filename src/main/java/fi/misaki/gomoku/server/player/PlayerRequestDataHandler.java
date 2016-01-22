@@ -1,9 +1,7 @@
-package fi.misaki.gomoku.server.user;
+package fi.misaki.gomoku.server.player;
 
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.server.RequestDataHandler;
-import fi.misaki.gomoku.server.lobby.LobbyManager;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -15,14 +13,14 @@ import javax.websocket.Session;
  * @author vlumi
  */
 @Stateless
-public class UserRequestDataHandler extends RequestDataHandler {
+public class PlayerRequestDataHandler extends RequestDataHandler {
 
     private static final long serialVersionUID = 8272657796866836750L;
 
-    private static final Logger LOGGER = Logger.getLogger(UserRequestDataHandler.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(PlayerRequestDataHandler.class.getName());
 
     @Inject
-    private UserManager userManager;
+    private PlayerManager playerManager;
 
     /**
      *
@@ -34,12 +32,12 @@ public class UserRequestDataHandler extends RequestDataHandler {
     public void handleRequestData(Session session, JsonObject data)
             throws InvalidRequestException {
 
-        switch (UserMessageDataType.ofCode(data.getString("type", ""))) {
+        switch (PlayerMessageDataType.ofCode(data.getString("type", ""))) {
             case LOGIN:
-                userManager.handleLoginRequest(session, data);
+                playerManager.handleLoginRequest(session, data);
                 break;
             default:
-                throw new InvalidRequestException("Invalid user request type.");
+                throw new InvalidRequestException("Invalid player request type.");
         }
 
     }

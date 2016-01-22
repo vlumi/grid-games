@@ -2,8 +2,8 @@ package fi.misaki.gomoku.server;
 
 import fi.misaki.gomoku.protocol.ErrorMessage;
 import fi.misaki.gomoku.protocol.InvalidRequestException;
-import fi.misaki.gomoku.server.user.UserManager;
-import fi.misaki.gomoku.server.user.User;
+import fi.misaki.gomoku.server.player.PlayerManager;
+import fi.misaki.gomoku.server.player.Player;
 import fi.misaki.gomoku.server.lobby.LobbyManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,13 +18,13 @@ import javax.websocket.server.ServerEndpoint;
  *
  * @author vlumi
  */
-@ServerEndpoint("/gomoku")
-public class GomokuServer {
+@ServerEndpoint("/game")
+public class GameServer {
 
-    private static final Logger LOGGER = Logger.getLogger(GomokuServer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GameServer.class.getName());
 
     @Inject
-    private UserManager userManager;
+    private PlayerManager playerManager;
     @Inject
     private RequestHandler requestHandler;
     @Inject
@@ -74,11 +74,11 @@ public class GomokuServer {
     public void onClose(Session session) {
         LOGGER.log(Level.FINEST, "[{0}] CLOSE", session.getId());
 
-        User user = userManager.getUserForSessionId(session.getId());
-        userManager.endSession(session);
-        if (user != null && user.getSessions().isEmpty()) {
-            // No more open sessions for the user.
-            lobbyManager.sendPartMessage(user);
+        Player player = playerManager.getPlayerForSessionId(session.getId());
+        playerManager.endSession(session);
+        if (player != null && player.getSessions().isEmpty()) {
+            // No more open sessions for the player.
+            lobbyManager.sendPartMessage(player);
         }
     }
 

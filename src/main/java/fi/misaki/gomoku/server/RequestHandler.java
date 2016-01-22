@@ -1,9 +1,9 @@
 package fi.misaki.gomoku.server;
 
-import fi.misaki.gomoku.server.user.UserRequestDataHandler;
+import fi.misaki.gomoku.server.player.PlayerRequestDataHandler;
 import fi.misaki.gomoku.protocol.InvalidRequestException;
 import fi.misaki.gomoku.protocol.RequestMessage;
-import fi.misaki.gomoku.server.gomoku.GomokuRequestDataHandler;
+import fi.misaki.gomoku.server.game.GameRequestDataHandler;
 import fi.misaki.gomoku.server.lobby.LobbyRequestDataHandler;
 import java.io.Serializable;
 import java.util.logging.Logger;
@@ -24,11 +24,11 @@ public class RequestHandler implements Serializable {
     private static final long serialVersionUID = 1241174184175430192L;
 
     @Inject
-    private UserRequestDataHandler authRequestHandler;
+    private PlayerRequestDataHandler authRequestHandler;
     @Inject
     private LobbyRequestDataHandler lobbyRequestHandler;
     @Inject
-    private GomokuRequestDataHandler gomokuRequestHandler;
+    private GameRequestDataHandler gameRequestHandler;
 
     /**
      *
@@ -43,14 +43,14 @@ public class RequestHandler implements Serializable {
 
         RequestDataHandler handler;
         switch (request.getContext()) {
-            case USER:
+            case PLAYER:
                 handler = this.authRequestHandler;
                 break;
             case LOBBY:
                 handler = this.lobbyRequestHandler;
                 break;
-            case GOMOKU:
-                handler = this.gomokuRequestHandler;
+            case GAME:
+                handler = this.gameRequestHandler;
                 break;
             default:
                 throw new InvalidRequestException("Invalid request type.");

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.game;
 
 import java.util.Arrays;
 
@@ -12,17 +12,17 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum GomokuCellState {
+public enum BoardCellState {
     FREE(0),
-    WHITE(GomokuSide.WHITE),
-    BLACK(GomokuSide.BLACK),
+    WHITE(GameSide.WHITE),
+    BLACK(GameSide.BLACK),
     UNKNOWN(-1);
 
-    private GomokuCellState(int value) {
+    private BoardCellState(int value) {
         this.value = value;
     }
 
-    private GomokuCellState(GomokuSide side) {
+    private BoardCellState(GameSide side) {
         this.value = side.getValue();
     }
 
@@ -32,8 +32,8 @@ public enum GomokuCellState {
         return value;
     }
 
-    public static GomokuCellState ofValue(int value) {
-        return Arrays.asList(GomokuCellState.values())
+    public static BoardCellState ofValue(int value) {
+        return Arrays.asList(BoardCellState.values())
                 .stream()
                 .filter(entry -> entry.getValue() == value)
                 .findAny()

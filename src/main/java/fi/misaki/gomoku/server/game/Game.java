@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.game;
 
-import fi.misaki.gomoku.server.user.User;
+import fi.misaki.gomoku.server.player.Player;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -19,31 +19,42 @@ import javax.json.JsonArrayBuilder;
  *
  * @author vlumi
  */
-public class GomokuGame {
+public class Game {
 
-    private final GomokuGameBoard board;
+    private final static GameVariant DEFAULT_VARIANT = GameVariant.TICTACTOE;
 
-    private final Deque<GomokuGamePosition> turnHistory = new ConcurrentLinkedDeque<>();
+    private final GameBoard board;
+
+    private final Deque<GameBoardPosition> moveHistory = new ConcurrentLinkedDeque<>();
     private boolean gameOver = false;
 
-    private User playerWhite;
-    private User playerBlack;
-    private User winner = null;
-    private User loser = null;
-    private GomokuSide currentTurn;
+    private GameVariant variant;
+    private Player playerWhite;
+    private Player playerBlack;
+    private Player winner = null;
+    private Player loser = null;
+    private GameSide currentTurn;
     private boolean running = false;
 
-    public GomokuGame() {
-        this.board = new GomokuGameBoard();
+    public Game() {
+        this(DEFAULT_VARIANT);
     }
 
-    public boolean addPlayer(User user) {
+    public Game(GameVariant variant) {
+        this.variant = variant;
+        this.board = new GameBoard(
+                variant.getColumns(),
+                variant.getRows(),
+                variant.getWinLength());
+    }
+
+    public boolean addPlayer(Player player) {
         if (this.playerWhite == null) {
-            this.playerWhite = user;
+            this.playerWhite = player;
             return true;
         }
-        if (this.playerBlack == null && this.playerWhite != user) {
-            this.playerBlack = user;
+        if (this.playerBlack == null && this.playerWhite != player) {
+            this.playerBlack = player;
             return true;
         }
         return false;
@@ -60,15 +71,17 @@ public class GomokuGame {
             if (this.playerWhite != null
                     && this.playerBlack != null
                     && !this.gameOver) {
-                this.currentTurn = GomokuSide.WHITE;
+                this.currentTurn = GameSide.WHITE;
                 this.running = true;
-                this.board.reset();
-                this.turnHistory.clear();
             }
             if (this.winner != null && this.loser != null) {
                 this.playerWhite = this.winner;
                 this.playerBlack = this.loser;
             }
+            this.board.reset();
+            this.moveHistory.clear();
+            this.winner = null;
+            this.loser = null;
         }
     }
 
@@ -84,8 +97,8 @@ public class GomokuGame {
         }
         synchronized (this.board) {
             boolean turnSuccessful = false;
-            User currentPlayer = null;
-            User nextPlayer = null;
+            Player currentPlayer = null;
+            Player nextPlayer = null;
             switch (this.currentTurn) {
                 case WHITE:
                     currentPlayer = this.playerWhite;
@@ -105,10 +118,7 @@ public class GomokuGame {
 
             if (turnSuccessful) {
                 recordTurn(column, row, this.currentTurn);
-                if (this.gameOver) {
-                    this.winner = currentPlayer;
-                    this.loser = nextPlayer;
-                } else {
+                if (!this.gameOver) {
                     this.currentTurn = this.currentTurn.getOther();
                 }
             }
@@ -116,7 +126,7 @@ public class GomokuGame {
         }
     }
 
-    public void leave(User user) {
+    public void leave(Player player) {
         // TODO: implement
         terminate();
     }
@@ -134,7 +144,7 @@ public class GomokuGame {
         return this.running && !this.gameOver;
     }
 
-    public GomokuSide getCurrentTurn() {
+    public GameSide getCurrentTurn() {
         return this.currentTurn;
     }
 
@@ -142,30 +152,34 @@ public class GomokuGame {
         return gameOver;
     }
 
-    public Set<User> getPlayers() {
-        final Set<User> players = new HashSet<>();
+    public GameVariant getVariant() {
+        return variant;
+    }
+
+    public Set<Player> getPlayers() {
+        final Set<Player> players = new HashSet<>();
         players.add(getPlayerWhite());
         players.add(getPlayerBlack());
         return players;
     }
 
-    public User getWinner() {
+    public Player getWinner() {
         return this.winner;
     }
 
-    public User getLoser() {
+    public Player getLoser() {
         return this.loser;
     }
 
-    public User getPlayerWhite() {
+    public Player getPlayerWhite() {
         return this.playerWhite;
     }
 
-    public User getPlayerBlack() {
+    public Player getPlayerBlack() {
         return this.playerBlack;
     }
 
-    public User getPlayer(GomokuSide side) {
+    public Player getPlayer(GameSide side) {
         switch (side) {
             case WHITE:
                 return this.playerWhite;
@@ -175,32 +189,32 @@ public class GomokuGame {
         return null;
     }
 
-    public GomokuSide getSide(User player) {
+    public GameSide getSide(Player player) {
         if (this.playerWhite == player) {
-            return GomokuSide.WHITE;
+            return GameSide.WHITE;
         } else if (this.playerBlack == player) {
-            return GomokuSide.BLACK;
+            return GameSide.BLACK;
         } else {
-            return GomokuSide.UNKNOWN;
+            return GameSide.UNKNOWN;
         }
     }
 
-    public List<GomokuGamePosition> getTurnHistory() {
-        synchronized (this.turnHistory) {
-            return this.turnHistory.stream().collect(Collectors.toList());
+    public List<GameBoardPosition> getMoveHistory() {
+        synchronized (this.moveHistory) {
+            return this.moveHistory.stream().collect(Collectors.toList());
         }
     }
 
-    public GomokuGamePosition getLastTurn() {
-        synchronized (this.turnHistory) {
-            return this.turnHistory.peekLast();
+    public GameBoardPosition getLastMove() {
+        synchronized (this.moveHistory) {
+            return this.moveHistory.peekLast();
         }
     }
 
     public JsonArrayBuilder getTurnHistoryAsJsonArrayBuilder() {
-        synchronized (this.turnHistory) {
+        synchronized (this.moveHistory) {
             JsonArrayBuilder turns = Json.createArrayBuilder();
-            this.turnHistory.stream()
+            this.moveHistory.stream()
                     .map(turn -> Json.createArrayBuilder()
                             .add(turn.getSide().getValue())
                             .add(turn.getColumn())
@@ -216,7 +230,7 @@ public class GomokuGame {
      *
      * @return
      */
-    public List<GomokuGamePosition> getWinningPositions() {
+    public List<GameBoardPosition> getWinningPositions() {
         synchronized (this.board) {
             return this.board.getWinningPositions();
         }
@@ -246,25 +260,20 @@ public class GomokuGame {
      * @param row
      * @param side
      */
-    private void recordTurn(int column, int row, GomokuSide side) {
-        GomokuGamePosition move = new GomokuGamePosition(column, row, side);
-        synchronized (this.turnHistory) {
-            this.turnHistory.add(move);
+    private void recordTurn(int column, int row, GameSide side) {
+        GameBoardPosition move = new GameBoardPosition(column, row, side);
+        synchronized (this.moveHistory) {
+            this.moveHistory.add(move);
         }
         if (board.isWinningTurn(move)) {
-
             gameOver(side);
         } else if (!this.gameOver && !board.isWinnable()) {
-            gameOver(GomokuSide.UNKNOWN);
+            gameOver(GameSide.UNKNOWN);
         }
     }
 
-    private void gameOver(GomokuSide winner, List<GomokuGamePosition> winningPositions) {
-        gameOver(winner);
-
-    }
-
-    private void gameOver(GomokuSide winner) {
+    private void gameOver(GameSide winner) {
+        System.out.println("Game over! winner: " + winner);
         this.gameOver = true;
         switch (winner) {
             case WHITE:
@@ -275,6 +284,9 @@ public class GomokuGame {
                 this.winner = this.playerBlack;
                 this.loser = this.playerWhite;
                 break;
+            default:
+                this.winner = null;
+                this.loser = null;
         }
     }
 

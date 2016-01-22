@@ -1,4 +1,4 @@
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.game;
 
 import java.util.Arrays;
 
@@ -6,7 +6,7 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum GomokuMessageDataType {
+public enum GameMessageDataType {
     // TODO: split to request/response?
     STATE("state"),
     CHALLENGE("challenge"),
@@ -22,7 +22,7 @@ public enum GomokuMessageDataType {
 
     private final String code;
 
-    private GomokuMessageDataType(String code) {
+    private GameMessageDataType(String code) {
         this.code = code;
     }
 
@@ -30,8 +30,8 @@ public enum GomokuMessageDataType {
         return code;
     }
 
-    public static GomokuMessageDataType ofCode(String code) {
-        return Arrays.asList(GomokuMessageDataType.values())
+    public static GameMessageDataType ofCode(String code) {
+        return Arrays.asList(GameMessageDataType.values())
                 .stream()
                 .filter(value -> value.getCode().equals(code))
                 .findAny()

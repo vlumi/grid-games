@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.game;
 
 import java.util.Objects;
 
@@ -11,13 +11,13 @@ import java.util.Objects;
  *
  * @author vlumi
  */
-public class GomokuGamePosition {
+public class GameBoardPosition {
 
     private final int column;
     private final int row;
-    private final GomokuSide side;
+    private final GameSide side;
 
-    public GomokuGamePosition(int column, int row, GomokuSide value) {
+    public GameBoardPosition(int column, int row, GameSide value) {
         this.column = column;
         this.row = row;
         this.side = value;
@@ -31,7 +31,7 @@ public class GomokuGamePosition {
         return row;
     }
 
-    public GomokuSide getSide() {
+    public GameSide getSide() {
         return side;
     }
 
@@ -42,10 +42,10 @@ public class GomokuGamePosition {
      */
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof GomokuGamePosition)) {
+        if (!(obj instanceof GameBoardPosition)) {
             return super.equals(obj);
         }
-        GomokuGamePosition otherSide = (GomokuGamePosition) obj;
+        GameBoardPosition otherSide = (GameBoardPosition) obj;
         return this.column == otherSide.getColumn()
                 && this.row == otherSide.getRow()
                 && this.side == otherSide.getSide();
@@ -62,7 +62,7 @@ public class GomokuGamePosition {
 
     @Override
     public String toString() {
-        return "GomokuGamePosition{" + "column=" + column + ", row=" + row + ", side=" + side + '}';
+        return "GameBoardPosition{" + "column=" + column + ", row=" + row + ", side=" + side + '}';
     }
 
 }

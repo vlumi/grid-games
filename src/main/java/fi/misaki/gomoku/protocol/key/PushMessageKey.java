@@ -13,7 +13,7 @@ public enum PushMessageKey {
     DATA("data", true),
     UNKNOWN();
 
-    private String code;
+    private final String code;
     private final boolean mandatory;
 
     private PushMessageKey() {

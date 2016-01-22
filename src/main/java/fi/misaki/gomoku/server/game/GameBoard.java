@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package fi.misaki.gomoku.server.gomoku;
+package fi.misaki.gomoku.server.game;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,52 +15,56 @@ import java.util.List;
  *
  * @author vlumi
  */
-public class GomokuGameBoard implements Serializable {
+public class GameBoard implements Serializable {
 
     private static final long serialVersionUID = 2774766165752029443L;
 
-    private static final int DEFAULT_SIDE_LENGTH = 19;
+    private static final int DEFAULT_COLUMNS = 19;
+    private static final int DEFAULT_ROWS = 19;
     private static final int DEFAULT_WINNING_LENGTH = 5;
 
-    private final int sideLength;
+    private final int columns;
+    private final int rows;
     private final int winningLength;
     private final int[][] grid;
     private int turnsLeft;
-    private final List<GomokuGamePosition> winningPositions = Collections.synchronizedList(new ArrayList<>());
+    private final List<GameBoardPosition> winningPositions = Collections.synchronizedList(new ArrayList<>());
 
-    public GomokuGameBoard() {
-        this(DEFAULT_SIDE_LENGTH, DEFAULT_WINNING_LENGTH);
+    public GameBoard() {
+        this(DEFAULT_COLUMNS, DEFAULT_ROWS, DEFAULT_WINNING_LENGTH);
     }
 
-    public GomokuGameBoard(int sideLength, int winningLength) {
-        this.sideLength = sideLength;
+    public GameBoard(int columns, int rows, int winningLength) {
+        this.columns = columns;
+        this.rows = rows;
         this.winningLength = winningLength;
-        this.grid = new int[sideLength][sideLength];
+        this.grid = new int[columns][rows];
         reset();
-        this.turnsLeft = this.sideLength * this.sideLength;
     }
 
     public void reset() {
         for (int[] row : this.grid) {
-            Arrays.fill(row, GomokuCellState.FREE.getValue());
+            Arrays.fill(row, BoardCellState.FREE.getValue());
         }
+        winningPositions.clear();
+        this.turnsLeft = this.columns * this.rows;
     }
 
-    public GomokuCellState getSideAtPosition(int column, int row) {
+    public BoardCellState getSideAtPosition(int column, int row) {
         synchronized (this.grid) {
-            return GomokuCellState.ofValue(this.grid[column][row]);
+            return BoardCellState.ofValue(this.grid[column][row]);
         }
     }
 
     public boolean placeWhitePiece(int column, int row) {
-        return this.placePiece(GomokuSide.WHITE, column, row);
+        return this.placePiece(GameSide.WHITE, column, row);
     }
 
     public boolean placeBlackPiece(int column, int row) {
-        return this.placePiece(GomokuSide.BLACK, column, row);
+        return this.placePiece(GameSide.BLACK, column, row);
     }
 
-    private boolean placePiece(GomokuSide side, int column, int row) {
+    private boolean placePiece(GameSide side, int column, int row) {
         synchronized (this.grid) {
             if (!isCellFree(column, row)) {
                 return false;
@@ -72,8 +76,8 @@ public class GomokuGameBoard implements Serializable {
     }
 
     private boolean isCellFree(int column, int row) {
-        GomokuCellState oldValue = GomokuCellState.ofValue(this.grid[column][row]);
-        return oldValue == GomokuCellState.FREE;
+        BoardCellState oldValue = BoardCellState.ofValue(this.grid[column][row]);
+        return oldValue == BoardCellState.FREE;
     }
 
     /**
@@ -82,7 +86,9 @@ public class GomokuGameBoard implements Serializable {
      * @param turn
      * @return
      */
-    public boolean isWinningTurn(GomokuGamePosition turn) {
+    public boolean isWinningTurn(GameBoardPosition turn) {
+        System.out.println("isWinningTurn");
+        dump();
         if (turn == null) {
             return false;
         }
@@ -90,8 +96,8 @@ public class GomokuGameBoard implements Serializable {
         int column = turn.getColumn();
 
         synchronized (this.grid) {
-            List<GomokuGamePosition> positions
-                    = GomokuGameBoardChecker.getWinningPositions(this.grid, this.winningLength, column, row);
+            List<GameBoardPosition> positions
+                    = GameBoardChecker.getWinningPositions(this.grid, this.winningLength, column, row);
             if (!positions.isEmpty()) {
                 synchronized (this.winningPositions) {
                     this.winningPositions.clear();
@@ -107,7 +113,7 @@ public class GomokuGameBoard implements Serializable {
      *
      * @return
      */
-    public List<GomokuGamePosition> getWinningPositions() {
+    public List<GameBoardPosition> getWinningPositions() {
         return new ArrayList<>(this.winningPositions);
     }
 
@@ -119,11 +125,23 @@ public class GomokuGameBoard implements Serializable {
      * @return
      */
     public boolean isWinnable() {
+        System.out.println("isWinnable");
+        dump();
         if (this.turnsLeft <= 0) {
             return false;
         }
         synchronized (this.grid) {
-            return GomokuGameBoardChecker.isWinnable(this.grid, this.winningLength);
+            return GameBoardChecker.isWinnable(this.grid, this.winningLength);
+        }
+    }
+
+    private void dump() {
+        for (int[] row : grid) {
+            StringBuffer rowStr = new StringBuffer();
+            for (int cell : row) {
+                rowStr.append(cell);
+            }
+            System.out.println(rowStr);
         }
     }
 
