@@ -1,0 +1,210 @@
+#loginLayer {
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background: white;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+#loginArea {
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto; 
+    z-index: 3;
+}
+#main {
+    width: 100%;
+}
+h1 {
+    width: 100%;
+    text-align: center;
+}
+#challengeArea {
+    text-align: center;
+    width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+#memberListArea {
+    height: 100%;
+}
+#memberList {
+    padding: 0;
+    margin: 0;
+    border: solid black 1px;
+    width: 200px;
+    height: 100%;
+    overflow: auto;
+}
+#memberList li {
+    list-style-type: none;
+    padding: 0 1em;
+    margin: 0;
+    color: forestgreen;
+}
+#memberList .selected {
+    background-color: gold;
+    color: darkgreen;
+}
+#memberList .self {
+    color: darkslategrey;
+}
+#memberList .busy {
+    color: coral;
+}
+#lobbyArea {
+    width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+#lobby {
+    padding: 0;
+    margin: 0;
+    border: solid black 1px;
+    width: 100%;
+    height: 300px;
+    overflow: scroll;
+}
+#lobby div {
+    position: relative;
+    left: 0px;
+    height: 1em;
+    margin: 0;
+    padding: 0;
+}
+#lobby .timestamp {
+    position: absolute;
+    width: 70px;
+    left: 0px;
+    top: 0px;
+}
+#lobby .player {
+    position: absolute;
+    left: 70px;
+    top: 0px;
+    width: 100px;
+    overflow: hidden;
+}
+#lobby .message {
+    position: absolute;
+    left: 170px;
+    top: 0px;
+    white-space: nowrap;
+}
+#lobby .fromSelf {
+    color: darkslategrey;
+}
+#lobby .private {
+    color: darkred;
+}
+#gameArea {
+    text-align: center;
+    width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+#gameArea .gameBoard {
+    border-collapse: collapse;
+    background-color: gold;
+    margin-left: auto;
+    margin-right: auto;
+}
+#gameArea .gameBoard th {
+    font-weight: bold;
+    text-decoration: none;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    vertical-align: middle;
+}
+#gameArea .gameBoard .free {
+    background: none;
+    cursor: pointer;
+}
+#gameArea .gameBoard .lastMove {
+    background-color: lightblue;
+}
+#gameArea .gameBoard .winner {
+    background-color: greenyellow;
+}
+#gameArea .gameBoard.size30 td {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    padding: 0;
+}
+#gameArea .gameBoard.size30 td div {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    padding: 0;
+}
+#gameArea.noTouch .gameBoard.size30.myTurn.side1 .free:hover {
+    background-image:  url("../img/30/piece_1.png")
+}
+#gameArea.noTouch .gameBoard.size30.myTurn.side2 .free:hover {
+    background-image:  url("../img/30/piece_2.png")
+}
+#gameArea .gameBoard.size30 .side1,
+#gameArea .gameBoard.size30 .side1:hover {
+    background-image: url("../img/30/piece_1.png")
+}
+#gameArea .gameBoard.size30 .side2,
+#gameArea.noTouch .gameBoard.size30 .side2:hover {
+    background-image: url("../img/30/piece_2.png")
+}
+#gameArea .gameBoard.size30 .top .left {
+    background-image: url("../img/30/bg_top_left.png")
+}
+#gameArea .gameBoard.size30 .top .center {
+    background-image: url("../img/30/bg_top_center.png")
+}
+#gameArea .gameBoard.size30 .top .right {
+    background-image: url("../img/30/bg_top_right.png")
+}
+#gameArea .gameBoard.size30 .middle .left {
+    background-image: url("../img/30/bg_middle_left.png")
+}
+#gameArea .gameBoard.size30 .middle .center {
+    background-image: url("../img/30/bg_middle_center.png")
+}
+#gameArea .gameBoard.size30 .middle .right {
+    background-image: url("../img/30/bg_middle_right.png")
+}
+#gameArea .gameBoard.size30 .bottom .left {
+    background-image: url("../img/30/bg_bottom_left.png")
+}
+#gameArea .gameBoard.size30 .bottom .center {
+    background-image: url("../img/30/bg_bottom_center.png")
+}
+#gameArea .gameBoard.size30 .bottom .right {
+    background-image: url("../img/30/bg_bottom_right.png")
+}
+
+#gameArea .gameBoard.size128 td {
+    width: 128px;
+    height: 128px;
+    border: solid black 1px;
+    padding: 0;
+}
+#gameArea .gameBoard.size128 td div {
+    width: 128px;
+    height: 128px;
+    border: 0;
+    padding: 0;
+}
+#gameArea.noTouch .gameBoard.size128.myTurn.side1 .free:hover {
+    background-image:  url("../img/128/piece_x.png")
+}
+#gameArea.noTouch .gameBoard.size128.myTurn.side2 .free:hover {
+    background-image:  url("../img/128/piece_o.png")
+}
+#gameArea .gameBoard.size128 .side1,
+#gameArea .gameBoard.size128 .side1:hover {
+    background-image: url("../img/128/piece_x.png")
+}
+#gameArea .gameBoard.size128 .side2,
+#gameArea .gameBoard.size128 .side2:hover {
+    background-image: url("../img/128/piece_o.png")
+}

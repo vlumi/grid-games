@@ -1,11 +1,18 @@
-Gomoku with Websockets
-======================
+Two-player Grid Games
+=====================
 
-Implementation of the Gomoku game as a client-server using websockets.
+Grid-type games, with a square grid and two sides, implemented using a Java EE 7
+server and WebSockets.
+
+Games currently included are:
+
+* Tic-Tac-Toe
+* Gomoku (five-in-a-row)
+
+The framework features a rudimentary lobby chat, allowing people to login and
+challenge each others to a game of chosen variant.
 
 The server backend is Java EE 7 on Java 8, and the front-end is HTML 5 and jQuery.
-
-Work in progress -- not much to see yet.
 
 Requirements
 ------------
@@ -13,3 +20,19 @@ Requirements
 * JDK 1.8
 * Java EE 7 compliant application server (developed on GlassFish 4.1)
 * Modern web browser with JavaScript enabled
+
+Missing features
+----------------
+
+* Forfeit/quit game
+* Handling of opponent player leaving
+* Better indication of current state; game over, whose turn, opponent
+* Less obtrusive alert/confirm message boxes
+
+Wish-list
+---------
+
+* Score tracking
+* Persistence; current implementation is transient for easier deployment
+* More games; reversi, go
+* Standard/free-style variations to gomoku
