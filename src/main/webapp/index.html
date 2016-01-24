@@ -10,17 +10,35 @@
         <link rel="stylesheet" type="text/css" href="static/css/grid.css"/>
     </head>
     <body>
-        <form id="loginForm" onsubmit="return false;">
-            <div id="loginLayer">
-                <div id="loginArea">
-                    <h2>Please login</h2>
-                    <input id="url" class="form-control" type="text" placeholder="url" value="">
-                    <input id="name" class="form-control" type="text" placeholder="Name (optional)" maxlength="10">
-                    <input id="password" class="form-control" type="password" placeholder="Password (optional)">
-                    <button id="login" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+        <div id="loginModal" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Login</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form id="loginForm" onsubmit="return false;">
+                            <div id="loginArea">
+                                <div class="form-group">
+                                    <label for="url"><span class="glyphicon glyphicon-cloud"></span> URL</label>
+                                    <input id="url" class="form-control" type="text" placeholder="url" value="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="name"><span class="glyphicon glyphicon-user"></span> Name (optional)</label>
+                                    <input type="text" class="form-control" id="name" placeholder="Name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="password"><span class="glyphicon glyphicon-eye-open"></span> Password (optional)</label>
+                                    <input type="text" class="form-control" id="password" placeholder="Password">
+                                </div>
+                                <button id="login" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
+
             </div>
-        </form>
+        </div>
 
         <div id="main">
             <h1>Grid Game</h1>
@@ -31,8 +49,6 @@
                     <select id="variantList" size="1"></select>
                     <input type="submit" id="challengeGame" value="Challenge!">
                 </span>
-            </div>
-            <div id="gameArea" class="noTouch">
             </div>
             <div id="lobbyArea">
                 <div id="lobbySendArea">
@@ -45,6 +61,79 @@
                 </div>
                 <div id="lobby">
                 </div>
+            </div>
+        </div>
+
+        <div id="messageModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 id="messageTitle" class="modal-title"></h4>
+                    </div>
+                    <div id="messageBody" class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="gameModal" class="modal fade" role="dialog">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 id="gameTitle" class="modal-title">Game</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div id="gameStatus">
+                        </div>
+                        <div id="gameArea">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="gameCloseButton" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="challengeModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Game challenge</h4>
+                    </div>
+                    <div id="challengeMessageBody" class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button id="challengeYes" type="button" class="btn btn-default" data-dismiss="modal">Yes</button>
+                        <button id="challengeNo" type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="gameOverModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Game over!</h4>
+                    </div>
+                    <div id="gameOverMessageBody" class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button id="newGameYes" type="button" class="btn btn-default" data-dismiss="modal">Yes</button>
+                        <button id="newGameNo" type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 

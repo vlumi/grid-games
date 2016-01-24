@@ -209,7 +209,8 @@ public class GameManager implements Serializable {
                 return;
             }
             playerManager.setFree(game.getPlayers().toArray(new Player[0]));
-            // TODO: notify
+            PushMessage message = createLeaveMessage();
+            playerManager.sendMessage(game.getPlayers(), message);
             game.leave(player);
             this.games.remove(player);
         }
@@ -297,6 +298,17 @@ public class GameManager implements Serializable {
                 .add("turn", game.getCurrentSide().getValue())
                 .add("moves", game.getMoveHistoryAsJsonArrayBuilder())
                 .add("variant", game.getVariant().getValue());
+        return message;
+    }
+
+    /**
+     *
+     * @param game
+     * @param side
+     * @return
+     */
+    private PushMessage createLeaveMessage() {
+        PushMessage message = createPushMessageTemplate(GameMessageDataType.LEAVE);
         return message;
     }
 

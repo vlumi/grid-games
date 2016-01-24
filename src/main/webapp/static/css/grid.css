@@ -98,6 +98,9 @@ h1 {
 #lobby .private {
     color: darkred;
 }
+#gameStatus {
+    text-align: center;
+}
 #gameArea {
     text-align: center;
     width: 700px;
@@ -107,8 +110,14 @@ h1 {
 #gameArea .gameBoard {
     border-collapse: collapse;
     background-color: gold;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 30px auto;
+    box-shadow: 0px 0px 20px 10px red;
+}
+#gameArea .gameBoard.myTurn {
+    box-shadow: 0px 0px 20px 10px green;
+}
+#gameArea .gameBoard.gameOver {
+    box-shadow: 0px 0px 20px 10px blueviolet;
 }
 #gameArea .gameBoard th {
     font-weight: bold;

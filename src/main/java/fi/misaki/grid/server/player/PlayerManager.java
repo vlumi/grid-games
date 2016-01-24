@@ -355,6 +355,9 @@ public class PlayerManager implements Serializable {
      * @param messageString
      */
     private void sendMessage(Player player, String messageString) {
+        if (player == null) {
+            return;
+        }
         LOGGER.log(Level.FINEST, "Send message to player {0}: {1}", new String[]{player.getName(), messageString});
         player.getSessions().forEach(session -> {
             LOGGER.log(Level.FINEST, " - Send to session: {0}", session.getId());

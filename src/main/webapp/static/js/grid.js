@@ -6,15 +6,13 @@
             game,
             websocket,
             util;
-
     $(document).ready(function () {
         if ("WebSocket" in window) {
             init();
         } else {
-            alert("Websocket is not supported by your browser!");
+            util.showMessage("Error", "Websocket is not supported by your browser!");
         }
     });
-
     /**
      * Initialize the application.
      */
@@ -26,7 +24,6 @@
         lobby.init();
         game.init();
     };
-
     /**
      * Player session and authentication.
      */
@@ -38,7 +35,6 @@
                         parts = pageUrl.match(/^([a-z]+):\/\/(.+)(\/index\.html)?$/),
                         protocol = "ws",
                         defaultUrl;
-
                 if (parts.length < 2) {
                     return;
                 }
@@ -53,21 +49,16 @@
                 $("#url").val(defaultUrl);
             },
             enableLogin: function () {
-                $("#loginLayer").show();
-                $("#loginArea input").prop("disabled", false);
-                $("#logoutArea input").prop("disabled", true);
+                $("#loginModal").modal("show");
             },
             disableLogin: function () {
-                $("#loginLayer").hide();
-                $("#loginArea input").prop("disabled", true);
-                $("#logoutArea input").prop("disabled", false);
+                $("#loginModal").modal("hide");
             },
             login: function () {
                 var
                         url = $("#url").val(),
                         name = $("#name").val(),
                         password = $("#password").val();
-
                 var callback = function () {
                     websocket.send("player", {
                         "type": "login",
@@ -115,10 +106,9 @@
                 });
                 websocket.registerHandler("error", "player", function (message) {
                     // TODO: nicer message
-                    alert("Login failed: " + message.message);
+                    util.showMessage("Error", "Login failed: " + message.message);
                     self.enableLogin();
                 });
-
                 $(document)
                         .on("click.login", "#login", function () {
                             self.login();
@@ -136,11 +126,10 @@
                             }
                         });
                 self.setDefaultUrl();
-                $("#name").focus();
+                $("#loginModal").modal({keyboard: false});
             }
         };
     })();
-
     /**
      * Chat and status message window, as well as player list.
      */
@@ -155,18 +144,15 @@
                             minuteStr = d.getMinutes() < 10 ? "0" + d.getMinutes() : d.getMinutes(),
                             secondStr = d.getSeconds() < 10 ? "0" + d.getSeconds() : d.getSeconds(),
                             timestamp = hourStr + ":" + minuteStr + ":" + secondStr;
-
                     return timestamp;
                 },
                 updateMemberList: function () {
                     var
                             $memberList = $("#memberList"),
                             selected = $("#memberList :selected").val();
-
                     $memberList.find("option").remove();
                     $.each(self.memberList, function (index, name) {
                         var $element;
-
                         if (name !== player.session.name) {
                             $element = $("<option>")
                                     .attr("val", name)
@@ -201,7 +187,6 @@
                 addMessage: function (from, message, isFromSelf, isPrivate) {
                     var $entry, $timestamp, $player, $message;
                     $entry = $("<div>");
-
                     $timestamp = $("<span>")
                             .addClass("timestamp")
                             .text(self.ui.getTimestamp())
@@ -216,8 +201,6 @@
                             .text(message)
                             .attr("title", message)
                             .appendTo($entry);
-
-
                     if (isPrivate) {
                         $entry.addClass("private");
                     }
@@ -264,7 +247,6 @@
                         }
                         self.ui.addStatusMessage("Welcome, " + player.session.name + "!");
                         self.populateMemberList(members);
-
                         $("#lobbyArea").addClass("active");
                     },
                     join: function (data) {
@@ -279,7 +261,6 @@
                     },
                     chatMessage: function (data) {
                         var message, isFromSelf, isPrivate;
-
                         if (data.from === undefined) {
                             // System message
                             self.ui.addStatusMessage(data.message);
@@ -334,7 +315,6 @@
                     self.clearMemberList();
                     self.active = false;
                 });
-
                 $(document)
                         .on("click.member", "#memberList li:not(.self):not(.busy)", function (event) {
                             $("#memberList li.selected").removeClass("selected");
@@ -354,13 +334,13 @@
             }
         };
     })();
-
     /**
      * Game logic.
      */
     game = (function () {
         var self = {
             mySide: null,
+            challenger: "",
             boardCreator: (function () {
                 var
                         createTitleRow = function (length) {
@@ -385,7 +365,6 @@
                                     $piece = $("<div>"),
                                     column,
                                     cellClass;
-
                             for (column = 0; column < length; column++) {
                                 if (column === 0) {
                                     cellClass = "left";
@@ -413,7 +392,6 @@
                                     $row,
                                     row,
                                     rowClass;
-
                             $gameBoard = $("<table>")
                                     .addClass("gameBoard")
                                     .addClass("size" + cellSize)
@@ -463,14 +441,15 @@
             })(),
             createGame: function (opponent, variant) {
                 var
+                        $gameModal = $("#gameModal"),
                         $gameArea = $("#gameArea");
-
-                $("#challengeArea").hide();
                 $gameArea.html("");
                 $("<div data-turn>")
                         .appendTo($gameArea);
                 if (variant in self.boardCreator) {
-                    self.boardCreator[variant]($gameArea, opponent)
+                    self.boardCreator[variant]($gameArea, opponent);
+                    $gameModal.modal("show");
+                    $("#gameStatus").text("");
                 }
             },
             challenge: function (challengee, variant) {
@@ -481,24 +460,29 @@
                     variant: variant
                 };
                 websocket.send("game", message);
+                $("#gameStatus").text("Waiting for other player");
+                $("#gameArea").html("");
+                $("#gameModal").modal("show");
                 // TODO: set message to lobby
                 // TODO: set status on lobby
             },
-            acceptChallenge: function (challenger) {
+            acceptChallenge: function () {
                 var message = {
                     type: "acceptChallenge",
-                    to: challenger
+                    to: self.challenger
                 };
                 websocket.send("game", message);
                 // TODO: set message to lobby
                 // TODO: set status on lobby
+                self.challenger = "";
             },
-            rejectChallenge: function (challenger) {
+            rejectChallenge: function () {
                 var message = {
                     type: "rejectChallenge",
-                    to: challenger
+                    to: self.challenger
                 };
                 websocket.send("game", message);
+                self.challenger = "";
             },
             placePiece: function (row, column) {
                 var message = {
@@ -515,13 +499,19 @@
                 websocket.send("game", message);
             },
             close: function () {
-                $("#gameArea").html("");
-                $("#challengeArea").show();
-
                 var message = {
                     type: "leave"
                 };
                 websocket.send("game", message);
+            },
+            terminateGame: function () {
+                var
+                        $gameBoard = $("#gameArea .gameBoard");
+
+                $gameBoard.find(".lastMove").removeClass("lastMove");
+                $gameBoard
+                        .addClass("gameOver")
+                        .removeClass("myTurn");
             },
             handler: {
                 data: {
@@ -543,7 +533,6 @@
                                     .removeClass("free")
                                     .addClass(side);
                         });
-
                         self.mySide = data.you;
                         $gameBoard.addClass("side" + self.mySide);
                         if (self.mySide === data.turn) {
@@ -551,14 +540,12 @@
                         }
                     },
                     challenge: function (data) {
-                        var
-                                challenger = data.from,
-                                response = confirm("Accept challenge from " + challenger + " for a game of " + data.variant + "?");
-                        if (response) {
-                            self.acceptChallenge(challenger);
-                        } else {
-                            self.rejectChallenge(challenger);
-                        }
+                        self.challenger = data.from;
+                        $("#challengeMessageBody").text("Accept challenge from " + self.challenger + " for a game of " + data.variant + "?");
+                        $("#challengeModal").modal();
+                    },
+                    rejectChallenge: function (data) {
+                        $("#gameStatus").text("Player " + data.to + " rejected the challenge!");
                     },
                     placePiece: function (data) {
                         var
@@ -575,7 +562,6 @@
                                     .addClass(side)
                                     .addClass("lastMove");
                         });
-
                         $gameBoard.removeClass("myTurn");
                         if (self.mySide === data.turn) {
                             $gameBoard.addClass("myTurn");
@@ -606,16 +592,17 @@
                         } else {
                             gameOverMessage += " A tie!";
                         }
-                        $gameBoard.removeClass("myTurn");
-
-                        // TODO: nicer message
-                        newGameResponse = confirm(gameOverMessage + " Start a new game?");
-                        if (newGameResponse) {
-                            self.newGame();
-                        } else {
-                            self.close();
-                        }
+                        $gameBoard
+                                .removeClass("myTurn")
+                                .addClass("gameOver");
+                        $("#gameOverMessageBody").text(gameOverMessage + " Start a new game?");
+                        $("#gameOverModal").modal();
                         // TODO: set status on lobby
+                    },
+                    leave: function (data) {
+                        $("#gameOverModal").modal("hide");
+                        $("#gameStatus").text("The game has ended.");
+                        self.terminateGame();
                     }
                 }
             }
@@ -626,21 +613,17 @@
              */
             init: function () {
                 var $variantList = $("#variantList");
-
                 websocket.registerHandler("data", "game", function (data) {
                     if (data.type in self.handler.data) {
                         self.handler.data[data.type](data);
                     }
                 });
-
                 $.each(self.boardCreator, function (variant) {
                     $("<option>")
                             .val(variant)
                             .text(variant)
                             .appendTo($variantList);
                 });
-
-
                 $(document)
                         // TODO: listener to lobbymembers -- disable challenge button if none selected
                         .on("click", "#challengeGame", function (event) {
@@ -658,6 +641,21 @@
                                     row = parseInt(idSplit[1]),
                                     column = parseInt(idSplit[2]);
                             self.placePiece(row, column);
+                        })
+                        .on("click", "#challengeYes", function (event) {
+                            self.acceptChallenge();
+                        })
+                        .on("click", "#challengeNo", function (event) {
+                            self.rejectChallenge();
+                        })
+                        .on("click", "#newGameYes", function (event) {
+                            self.newGame();
+                        })
+                        .on("click", "#newGameNo", function (event) {
+                            self.close();
+                        })
+                        .on("click", "#gameCloseButton", function (event) {
+                            self.close();
                         });
             },
             onClose: function () {
@@ -665,7 +663,6 @@
             }
         };
     })();
-
     /**
      * Websocket handling.
      */
@@ -676,7 +673,6 @@
                 onMessage: function (event) {
                     var message = $.parseJSON(event.data);
                     util.log("Received message: " + event.data);
-
                     if (message.context in self.handler.message) {
                         self.handler.message[message.context](message);
                     } else if (message.context in self.eventHandlers.data) {
@@ -684,7 +680,7 @@
                     }
                 },
                 onError: function (event) {
-                    alert("Could not connect" + event);
+                    util.showMessage("Error", "Could not connect: " + event);
                 },
                 onClose: function () {
                     $.each(self.eventHandlers.close, function (index, handler) {
@@ -729,9 +725,7 @@
                         if (message.context in self.eventHandlers.error) {
                             self.eventHandlers.error[message.context](message);
                         } else {
-                            // TODO: framework
-                            // TODO: nicer message
-                            alert("Received error: " + message.text);
+                            util.showMessage("Error", message.text);
                         }
                         // TODO:
                     }
@@ -760,13 +754,11 @@
             },
             send: function (context, data) {
                 var message, messageStr;
-
                 message = {
                     "context": context,
                     "data": data
                 };
                 messageStr = JSON.stringify(message);
-
                 util.log("Send message: " + messageStr);
                 self.socket.send(messageStr);
             },
@@ -775,7 +767,6 @@
             }
         };
     })();
-
     /**
      * Common utilities.
      */
@@ -790,8 +781,12 @@
                         && typeof console.log === "function") {
                     console.log(message);
                 }
+            },
+            showMessage: function (title, message) {
+                $("#messageTitle").text(title);
+                $("#messageBody").text(message);
+                $("#messageModal").modal();
             }
         };
     })();
-
 })(jQuery);
