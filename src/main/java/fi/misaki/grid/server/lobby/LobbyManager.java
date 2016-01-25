@@ -51,7 +51,8 @@ public class LobbyManager implements Serializable {
     public void sendInitMessage(Player player) {
         PushMessage message = createPushMessageTemplate(LobbyMessageDataType.INIT);
         message.getData()
-                .add("members", this.playerManager.getFreeMembersAsJsonArrayBuilder());
+                .add("members", this.playerManager.getMembersAsJsonArrayBuilder())
+                .add("busyMembers", this.playerManager.getBusyMembersAsJsonArrayBuilder());
         playerManager.sendMessage(player, message);
     }
 

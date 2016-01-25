@@ -257,29 +257,42 @@ public class PlayerManager implements Serializable {
     }
 
     /**
+     * Get a list of all members' names, as a JsonArrayBuilder object.
+     *
+     * @return
+     */
+    public JsonArrayBuilder getMembersAsJsonArrayBuilder() {
+        JsonArrayBuilder membersBuilder = Json.createBuilderFactory(null)
+                .createArrayBuilder();
+        this.getMembers().forEach(member -> membersBuilder.add(member));
+
+        return membersBuilder;
+    }
+
+    /**
      * Get a set of all currently free members' names.
      *
      * @return
      */
-    public Set<String> getFreeMembers() {
+    public Set<String> getBusyMembers() {
         synchronized (this.playersByName) {
             return this.playersByName.values().stream()
-                    .filter(player -> player.isFree())
+                    .filter(player -> player.isBusy())
                     .map(player -> player.getName())
                     .collect(Collectors.toSet());
         }
     }
 
     /**
-     * Get a list of all currently free members' names, as a JsonArrayBuilder
+     * Get a list of all currently busy members' names, as a JsonArrayBuilder
      * object.
      *
      * @return
      */
-    public JsonArrayBuilder getFreeMembersAsJsonArrayBuilder() {
+    public JsonArrayBuilder getBusyMembersAsJsonArrayBuilder() {
         JsonArrayBuilder membersBuilder = Json.createBuilderFactory(null)
                 .createArrayBuilder();
-        this.getFreeMembers().forEach(member -> membersBuilder.add(member));
+        this.getBusyMembers().forEach(member -> membersBuilder.add(member));
 
         return membersBuilder;
     }

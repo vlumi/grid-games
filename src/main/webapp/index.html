@@ -11,7 +11,7 @@
     </head>
     <body>
         <div id="loginModal" class="modal fade" role="dialog">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h4 class="modal-title">Login</h4>
@@ -29,37 +29,34 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="password"><span class="glyphicon glyphicon-eye-open"></span> Password (optional)</label>
-                                    <input type="text" class="form-control" id="password" placeholder="Password">
+                                    <input type="password" class="form-control" id="password" placeholder="Password">
                                 </div>
                                 <button id="login" class="btn btn-lg btn-primary btn-block" type="submit">Login</button>
                             </div>
                         </form>
                     </div>
                 </div>
-
             </div>
         </div>
 
         <div id="main">
             <h1>Grid Game</h1>
-            <div id="challengeArea">
-                <span id="memberListArea">
-                    <span id="memberName"></span>
-                    <select id="memberList" size="1"></select>
-                    <select id="variantList" size="1"></select>
-                    <input type="submit" id="challengeGame" value="Challenge!">
-                </span>
-            </div>
-            <div id="lobbyArea">
-                <div id="lobbySendArea">
-                    <form id="lobbyForm" onsubmit="return false;">
-                        <input type="text" id="lobbyMessage" maxlength="160">
-                        <input type="checkbox" id="lobbyPrivateMessage"/>
-                        <label for="lobbyPrivateMessage">private</label>
-                        <input type="submit" id="sendLobbyMessage" value="Send">
-                    </form>
-                </div>
+            <div id="mainArea">
+                <button id="startGameButton" class="btn btn-lg btn-primary btn-block" type="submit">Start Game</button>
                 <div id="lobby">
+                </div>
+                <div id="lobbySendArea">
+                    <form id="lobbyForm" class="form-inline" onsubmit="return false;">
+                        <select id="memberList" class="form-control" size="1">
+                            <option value="">To Everyone</option>
+                        </select>
+                        <input type="text" id="lobbyMessage" class="form-control" maxlength="160">
+                        <label>
+                            <input type="checkbox" id="lobbyPrivateMessage" class="form-control">
+                            private
+                        </label>
+                        <button id="sendLobbyMessage" class="btn btn-sm btn-primary" type="submit">Send Message</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -75,6 +72,45 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="startGameModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Start a Game</h4>
+                    </div>
+                    <div id="startGameBody" class="modal-body">
+                        <div class="form-group">
+                            <label for="opponentList"><span class="glyphicon glyphicon-user"></span> Opponent</label>
+                            <select id="opponentList" class="form-control" size="1"></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="variantList"><span class="glyphicon glyphicon-knight"></span> Game variant</label>
+                            <select id="variantList" class="form-control" size="1"></select>
+                        </div>
+                        <button id="challengeButton" type="button" class="btn-lg btn-primary btn-block" data-dismiss="modal">Challenge</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="challengeModal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">You have been challenged!</h4>
+                    </div>
+                    <div id="challengeMessageBody" class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button id="challengeYes" type="button" class="btn btn-default" data-dismiss="modal">Yes</button>
+                        <button id="challengeNo" type="button" class="btn btn-default" data-dismiss="modal">No</button>
                     </div>
                 </div>
 
@@ -97,25 +133,6 @@
                         <button id="gameCloseButton" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     </div>
                 </div>
-
-            </div>
-        </div>
-
-        <div id="challengeModal" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                        <h4 class="modal-title">Game challenge</h4>
-                    </div>
-                    <div id="challengeMessageBody" class="modal-body">
-                    </div>
-                    <div class="modal-footer">
-                        <button id="challengeYes" type="button" class="btn btn-default" data-dismiss="modal">Yes</button>
-                        <button id="challengeNo" type="button" class="btn btn-default" data-dismiss="modal">No</button>
-                    </div>
-                </div>
-
             </div>
         </div>
 

@@ -29,6 +29,9 @@
      */
     player = (function () {
         var self = {
+            session: {
+                name: ""
+            },
             setDefaultUrl: function () {
                 var
                         pageUrl = window.location.href,
@@ -69,7 +72,7 @@
                 websocket.connect(url, callback);
             },
             logout: function () {
-                player.session.name = "";
+                self.session.name = "";
                 if (websocket.isConnected()) {
                     websocket.disconnect();
                 }
@@ -80,7 +83,8 @@
                     login: function (data) {
                         self.disableLogin();
                         $("#name").val(data.name);
-                        player.session.name = data.name;
+                        self.session.name = data.name;
+                        $("#loginModal").modal("hide");
                     }
                 }
             }
@@ -89,9 +93,7 @@
             /**
              * Current session information.
              */
-            session: {
-                name: ""
-            },
+            session: self.session,
             /**
              * Initialize player.
              */
@@ -124,6 +126,11 @@
                                     self.login();
                                     return false;
                             }
+                        })
+                        .on("hide.bs.modal", "#loginModal", function (event) {
+                            if (self.session.name === "") {
+                                return false;
+                            }
                         });
                 self.setDefaultUrl();
                 $("#loginModal").modal({keyboard: false});
@@ -146,24 +153,53 @@
                             timestamp = hourStr + ":" + minuteStr + ":" + secondStr;
                     return timestamp;
                 },
+                updateOpponentList: function () {
+                    var
+                            $opponentList = $("#opponentList"),
+                            $memberList = $("#memberList"),
+                            selected = $("#opponentList :selected").val();
+                    $opponentList.find("option").remove();
+                    $memberList
+                            .find("option[value!=''][data-status=free]:not(:disabled)")
+                            .clone()
+                            .appendTo($opponentList);
+                    if (typeof selected === "string" && selected !== "") {
+                        $opponentList.find("option[value='" + selected + "']");
+                    }
+                    if ($opponentList.find("option").length > 0) {
+                        $("#startGameButton").prop("disabled", false);
+                    } else {
+                        $("#startGameButton").prop("disabled", true);
+                    }
+                },
                 updateMemberList: function () {
                     var
                             $memberList = $("#memberList"),
                             selected = $("#memberList :selected").val();
-                    $memberList.find("option").remove();
+                    $memberList.find("option[value!='']").remove();
                     $.each(self.memberList, function (index, name) {
-                        var $element;
-                        if (name !== player.session.name) {
-                            $element = $("<option>")
-                                    .attr("val", name)
-                                    .text(name)
-                                    .appendTo($memberList);
-                            if (name === selected) {
-                                $element
-                                        .prop("selected", true);
-                            }
+                        var
+                                $element,
+                                status;
+
+                        if (name in self.memberStatuses) {
+                            status = self.memberStatuses[name];
+                        } else {
+                            status = self.memberStatuses[name] = "free";
+                        }
+
+                        $element = $("<option>")
+                                .attr("val", name)
+                                .text(name)
+                                .attr("data-status", status)
+                                .appendTo($memberList);
+                        if (name === player.session.name) {
+                            $element.prop("disabled", true);
+                        } else if (name === selected) {
+                            $element.prop("selected", true);
                         }
                     });
+                    self.ui.updateOpponentList();
                 },
                 sendMessage: function () {
                     var
@@ -172,11 +208,10 @@
                     message = {
                         type: "chatMessage",
                         message: $("#lobbyMessage").val(),
-                        to: "",
+                        to: to,
                         private: false
                     };
                     if ($("#lobbyPrivateMessage").prop("checked")) {
-                        message.to = to;
                         message.private = true;
                     }
                     if (typeof message.message === "string" && message.message.length > 0) {
@@ -234,6 +269,20 @@
                     self.populateMemberList(self.memberList);
                 }
             },
+            markMembersBusy: function (names) {
+                $.each(names, function (index, name) {
+                    self.memberStatuses[name] = "busy";
+                });
+                self.populateMemberList(self.memberList);
+            },
+            markMemberBusy: function (name) {
+                self.memberStatuses[name] = "busy";
+                self.populateMemberList(self.memberList);
+            },
+            markMemberFree: function (name) {
+                self.memberStatuses[name] = "free";
+                self.populateMemberList(self.memberList);
+            },
             clearMemberList: function () {
                 self.memberList = [];
                 self.populateMemberList(self.memberList);
@@ -241,18 +290,19 @@
             handler: {
                 data: {
                     init: function (data) {
-                        var members = data.members;
                         if (self.active) {
                             return;
                         }
                         self.ui.addStatusMessage("Welcome, " + player.session.name + "!");
-                        self.populateMemberList(members);
-                        $("#lobbyArea").addClass("active");
+                        self.populateMemberList(data.members);
+                        self.markMembersBusy(data.busyMembers);
+                        $("#mainArea").addClass("active");
                     },
                     join: function (data) {
                         if (data.name !== player.session.name) {
                             self.ui.addStatusMessage(data.name + " has joined.");
                             self.addMemberToList(data.name);
+                            self.markMemberFree(data.name);
                         }
                     },
                     part: function (data) {
@@ -286,10 +336,10 @@
                             self.ui.addStatusMessage(data.name + " is " + data.status + ".");
                             switch (data.status) {
                                 case "busy":
-                                    self.removeMemberFromList(data.name);
+                                    self.markMemberBusy(data.name);
                                     break;
                                 case "free":
-                                    self.addMemberToList(data.name);
+                                    self.markMemberFree(data.name);
                                     break;
                             }
                         }
@@ -310,7 +360,7 @@
                     }
                 });
                 websocket.registerHandler("close", "lobby", function () {
-                    $("#lobbyArea").removeClass("active");
+                    $("#mainArea").removeClass("active");
                     self.ui.addStatusMessage("Disconnected.");
                     self.clearMemberList();
                     self.active = false;
@@ -320,7 +370,7 @@
                             $("#memberList li.selected").removeClass("selected");
                             $(event.currentTarget).addClass("selected");
                         })
-                        .on("click.sendLobbyMessage", "#lobbyArea.active #sendLobbyMessage", function (event) {
+                        .on("click.sendLobbyMessage", "#mainArea.active #sendLobbyMessage", function (event) {
                             self.ui.sendMessage();
                             return false;
                         })
@@ -339,6 +389,7 @@
      */
     game = (function () {
         var self = {
+            gameRunning: false,
             mySide: null,
             challenger: "",
             boardCreator: (function () {
@@ -460,7 +511,7 @@
                     variant: variant
                 };
                 websocket.send("game", message);
-                $("#gameStatus").text("Waiting for other player");
+                $("#gameStatus").text("Waiting for other player...");
                 $("#gameArea").html("");
                 $("#gameModal").modal("show");
                 // TODO: set message to lobby
@@ -497,12 +548,14 @@
                     type: "newGame"
                 };
                 websocket.send("game", message);
+                $("#gameStatus").text("Waiting for other player...");
             },
             close: function () {
                 var message = {
                     type: "leave"
                 };
                 websocket.send("game", message);
+                self.gameRunning = false;
             },
             terminateGame: function () {
                 var
@@ -512,6 +565,7 @@
                 $gameBoard
                         .addClass("gameOver")
                         .removeClass("myTurn");
+                self.gameRunning = false;
             },
             handler: {
                 data: {
@@ -538,6 +592,7 @@
                         if (self.mySide === data.turn) {
                             $gameBoard.addClass("myTurn");
                         }
+                        self.gameRunning = true;
                     },
                     challenge: function (data) {
                         self.challenger = data.from;
@@ -598,11 +653,16 @@
                         $("#gameOverMessageBody").text(gameOverMessage + " Start a new game?");
                         $("#gameOverModal").modal();
                         // TODO: set status on lobby
+                        self.gameRunning = false;
                     },
                     leave: function (data) {
-                        $("#gameOverModal").modal("hide");
-                        $("#gameStatus").text("The game has ended.");
-                        self.terminateGame();
+                        if ($("#gameModal").is(":visible")) {
+                            $("#gameOverModal").modal("hide");
+                            $("#gameStatus").text("The game has ended.");
+                            self.terminateGame();
+                        } else if ($("#challengeModal").is(":visible")) {
+                            $("#challengeModal").modal("hide");
+                        }
                     }
                 }
             }
@@ -626,9 +686,12 @@
                 });
                 $(document)
                         // TODO: listener to lobbymembers -- disable challenge button if none selected
-                        .on("click", "#challengeGame", function (event) {
+                        .on("click", "#startGameButton", function (event) {
+                            $("#startGameModal").modal("show");
+                        })
+                        .on("click", "#challengeButton", function (event) {
                             var
-                                    challengee = $("#memberList").val(),
+                                    challengee = $("#opponentList").val(),
                                     variant = $("#variantList").val();
                             if (typeof challengee === "string" && challengee !== "") {
                                 self.challenge(challengee, variant);
@@ -656,6 +719,12 @@
                         })
                         .on("click", "#gameCloseButton", function (event) {
                             self.close();
+                            $("#gameModal").modal("hide");
+                        })
+                        .on("hide.bs.modal", "#gameModal", function (event) {
+                            if (self.gameRunning) {
+                                return false;
+                            }
                         });
             },
             onClose: function () {

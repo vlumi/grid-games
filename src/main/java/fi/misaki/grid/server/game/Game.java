@@ -93,11 +93,15 @@ public class Game implements Serializable {
      * @return true if the player could be added.
      */
     public boolean addPlayer(Player player) {
+        if (player == this.playerWhite || player == this.playerBlack) {
+            // Already added.
+            return true;
+        }
         if (this.playerWhite == null) {
             this.playerWhite = player;
             return true;
         }
-        if (this.playerBlack == null && this.playerWhite != player) {
+        if (this.playerBlack == null) {
             this.playerBlack = player;
             return true;
         }

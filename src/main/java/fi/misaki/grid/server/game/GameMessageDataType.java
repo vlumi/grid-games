@@ -10,7 +10,6 @@ public enum GameMessageDataType {
     // TODO: split to request/response?
     STATE("state"),
     CHALLENGE("challenge"),
-    CANCEL_CHALLENGE("cancelChallenge"),
     ACCEPT_CHALLENGE("acceptChallenge"),
     REJECT_CHALLENGE("rejectChallenge"),
     PLACE_PIECE("placePiece"),

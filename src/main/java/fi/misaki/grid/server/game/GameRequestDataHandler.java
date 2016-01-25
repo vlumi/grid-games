@@ -41,9 +41,6 @@ public class GameRequestDataHandler extends RequestDataHandler {
             case CHALLENGE:
                 gameManager.handleChallengeRequest(player, data);
                 break;
-            case CANCEL_CHALLENGE:
-                gameManager.handleCancelChallengeRequest(player, data);
-                break;
             case ACCEPT_CHALLENGE:
                 gameManager.handleAcceptChallengeRequest(player, data);
                 break;

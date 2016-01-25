@@ -58,6 +58,7 @@ public class GameManager implements Serializable {
         try {
             Game game = new Game(variant);
             game.addPlayer(challenger);
+            game.addPlayer(challengee);
             this.games.put(challenger, game);
 
             PushMessage message = createPushMessageTemplate(GameMessageDataType.CHALLENGE);
@@ -71,30 +72,6 @@ public class GameManager implements Serializable {
             this.playerManager.setFree(challenger, challengee);
             throw e;
         }
-    }
-
-    /**
-     *
-     * @param challenger
-     * @param data The data part of the request.
-     * @throws fi.misaki.grid.protocol.InvalidRequestException
-     */
-    public void handleCancelChallengeRequest(Player challenger, JsonObject data)
-            throws InvalidRequestException {
-        Player challengee = this.playerManager.getPlayerForName(data.getString("to", ""));
-
-        this.playerManager.setFree(challenger, challengee);
-
-        synchronized (this.games) {
-            this.games.remove(challenger);
-        }
-
-        PushMessage message = createPushMessageTemplate(GameMessageDataType.CANCEL_CHALLENGE);
-        message.getData()
-                .add("from", challenger.getName())
-                .add("to", challengee.getName());
-
-        playerManager.sendMessage(challengee, message);
     }
 
     /**

@@ -12,7 +12,7 @@ Games currently included are:
 The framework features a rudimentary lobby chat, allowing people to login and
 challenge each others to a game of chosen variant.
 
-The server backend is Java EE 7 on Java 8, and the front-end is HTML 5 and jQuery.
+The server backend is Java EE 7 on Java 8, and the front-end is HTML 5 with Bootstrap and jQuery.
 
 Requirements
 ------------
@@ -24,10 +24,7 @@ Requirements
 Missing features
 ----------------
 
-* Forfeit/quit game
-* Handling of opponent player leaving
 * Better indication of current state; game over, whose turn, opponent
-* Less obtrusive alert/confirm message boxes
 
 Wish-list
 ---------
