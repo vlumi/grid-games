@@ -1,3 +1,6 @@
+html { 
+    min-height:800px;
+}
 #loginLayer {
     width: 100%;
     height: 100%;
@@ -102,9 +105,9 @@ h1 {
     color: darkred;
 }
 .modal-lg {
-    width: auto;
-    min-width: 700px;
     max-width: 800px;
+    height: 100%;
+    overflow: auto;
 }
 #gameStatus {
     text-align: center;
@@ -113,6 +116,7 @@ h1 {
     text-align: center;
     margin-left: auto;
     margin-right: auto;
+    overflow: auto;
 }
 #gameArea .gameBoard {
     border-collapse: collapse;

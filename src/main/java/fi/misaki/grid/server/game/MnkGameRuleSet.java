@@ -9,12 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Rule set for the M,N,K-game
+ * Rule set for the M,N,K-game, i.e. on a grid of M columns and N rows, the
+ * winner has to get a sequence of K horizontally, vertically, or diagonally.
  *
  * @author vlumi
  */
 public class MnkGameRuleSet extends GameRuleSet {
 
+    /**
+     * The length of the sequence required to win the game.
+     */
     private final int winningLength;
 
     /**

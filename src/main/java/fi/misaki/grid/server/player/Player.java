@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import javax.websocket.Session;
 
 /**
+ * A player entity.
  *
  * @author vlumi
  */

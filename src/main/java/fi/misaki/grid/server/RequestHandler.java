@@ -31,9 +31,11 @@ public class RequestHandler implements Serializable {
     private GameRequestDataHandler gameRequestHandler;
 
     /**
+     * Handle the request message received from the client, passing the data
+     * handling to the associated handler.
      *
-     * @param message
-     * @param session
+     * @param message The received message
+     * @param session Current session.
      * @throws fi.misaki.grid.protocol.InvalidRequestException
      */
     public void handleRequest(String message, Session session)

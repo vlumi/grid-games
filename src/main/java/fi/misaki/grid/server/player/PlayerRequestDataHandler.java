@@ -9,6 +9,7 @@ import javax.json.JsonObject;
 import javax.websocket.Session;
 
 /**
+ * Request data handler for player messages.
  *
  * @author vlumi
  */
@@ -23,16 +24,17 @@ public class PlayerRequestDataHandler extends RequestDataHandler {
     private PlayerManager playerManager;
 
     /**
+     * Handle the request data of the received message.
      *
-     * @param session
-     * @param data
-     * @throws InvalidRequestException
+     * @param session The WebSocket session where the message was received from.
+     * @param data The data content of the received message.
+     * @throws InvalidRequestException in case of any errors
      */
     @Override
     public void handleRequestData(Session session, JsonObject data)
             throws InvalidRequestException {
 
-        switch (PlayerMessageDataType.ofCode(data.getString("type", ""))) {
+        switch (PlayerRequestMessageDataType.ofCode(data.getString("type", ""))) {
             case LOGIN:
                 playerManager.handleLoginRequest(session, data);
                 break;

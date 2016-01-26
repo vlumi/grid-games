@@ -13,7 +13,13 @@ import java.util.Arrays;
  * @author vlumi
  */
 public enum PlayerStatus {
+    /**
+     * Free for game challenges.
+     */
     FREE("free"),
+    /**
+     * Busy, cannot be challenged.
+     */
     BUSY("busy"),
     UNKNOWN("");
 

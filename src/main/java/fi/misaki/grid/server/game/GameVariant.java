@@ -10,10 +10,19 @@ import java.util.Arrays;
 /**
  * Game variant.
  *
+ * Each variant has a distinct rule set, which defines the size of the field and
+ * has methods for determining the game-ending condition.
+ *
  * @author vlumi
  */
 public enum GameVariant {
+    /**
+     * Free-style Gomoku game, i.e. five-in-a-row.
+     */
     GOMOKU("gomoku", new MnkGameRuleSet(19, 19, 5)),
+    /**
+     * Tic-tac-toe.
+     */
     TICTACTOE("tictactoe", new MnkGameRuleSet(3, 3, 3)),
     UNKNOWN("", null);
 

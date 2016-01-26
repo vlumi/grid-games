@@ -83,7 +83,13 @@ public class GameServer {
     public void onClose(Session session) {
         LOGGER.log(Level.FINEST, "[{0}] CLOSE", session.getId());
 
-        Player player = playerManager.getPlayerForSessionId(session.getId());
+        Player player;
+        try {
+            player = playerManager.getPlayerForSessionId(session.getId());
+        } catch (InvalidRequestException ex) {
+            LOGGER.log(Level.INFO, "Exception when closing WebSocket: {0}", ex);
+            return;
+        }
         playerManager.endSession(session);
         if (player != null && player.getSessions().isEmpty()) {
             // No more open sessions for the player.

@@ -1,5 +1,6 @@
 package fi.misaki.grid.server.lobby;
 
+import fi.misaki.grid.protocol.InvalidRequestException;
 import fi.misaki.grid.protocol.Message;
 import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.protocol.PushMessage;
@@ -16,6 +17,7 @@ import javax.inject.Inject;
 import javax.json.JsonObject;
 
 /**
+ * Logic for managing the lobby
  *
  * @author vlumi
  */
@@ -29,7 +31,15 @@ public class LobbyManager implements Serializable {
     @Inject
     private PlayerManager playerManager;
 
-    public void handleChatMessageRequest(Player player, JsonObject data) {
+    /**
+     * Handles a chat message received from the client.
+     *
+     * @param player The player who the message came from.
+     * @param data The data object from the received message.
+     * @throws InvalidRequestException
+     */
+    public void handleChatMessageRequest(Player player, JsonObject data)
+            throws InvalidRequestException {
         String message = data.getString("message", "");
         String to = data.getString("to", "");
 
@@ -45,11 +55,12 @@ public class LobbyManager implements Serializable {
     }
 
     /**
+     * Sends the initialization message to the player.
      *
-     * @param player
+     * @param player The player to send the message.
      */
     public void sendInitMessage(Player player) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.INIT);
+        PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.INIT);
         message.getData()
                 .add("members", this.playerManager.getMembersAsJsonArrayBuilder())
                 .add("busyMembers", this.playerManager.getBusyMembersAsJsonArrayBuilder());
@@ -57,12 +68,12 @@ public class LobbyManager implements Serializable {
     }
 
     /**
-     * Send a join message to all open sessions.
+     * Sends a join message to all open sessions.
      *
      * @param player The player who joined.
      */
     public void sendJoinMessage(Player player) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.JOIN);
+        PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.JOIN);
         message.getData()
                 .add("name", player.getName());
 
@@ -71,12 +82,12 @@ public class LobbyManager implements Serializable {
     }
 
     /**
-     * Send a part message to all open sessions.
+     * Sends a part message to all open sessions.
      *
      * @param player The player who left.
      */
     public void sendPartMessage(Player player) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.PART);
+        PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.PART);
         message.getData()
                 .add("name", player.getName());
 
@@ -85,12 +96,13 @@ public class LobbyManager implements Serializable {
     }
 
     /**
+     * Sends a message to all connected WebSocket sessions.
      *
-     * @param from
-     * @param messageText
+     * @param from The player who the message is from.
+     * @param messageText The message text content.
      */
     public void sendChatMessageToAll(Player from, String messageText) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.CHAT_MESSAGE);
+        PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.CHAT_MESSAGE);
         message.getData()
                 .add("from", from.getName())
                 .add("message", messageText);
@@ -100,14 +112,16 @@ public class LobbyManager implements Serializable {
     }
 
     /**
+     * Sends a chat message.
      *
-     * @param from
-     * @param to
-     * @param messageText
-     * @param isPrivate
+     * @param from Sender.
+     * @param to Recipient.
+     * @param messageText Message text content.
+     * @param isPrivate Whether the message is a private message to the
+     * recipient.
      */
     public void sendChatMessage(Player from, Player to, String messageText, boolean isPrivate) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.CHAT_MESSAGE);
+        PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.CHAT_MESSAGE);
         message.getData()
                 .add("from", from.getName())
                 .add("to", to.getName())
@@ -123,16 +137,26 @@ public class LobbyManager implements Serializable {
         }
     }
 
+    /**
+     * Sends a player busy event to everyone.
+     *
+     * @param player The player who is now busy.
+     */
     public void sendPlayerBusy(Player player) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.STATUS);
+        PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.STATUS);
         message.getData()
                 .add("name", player.getName())
                 .add("status", "busy");
         this.sendMessageToAllSessions(message);
     }
 
+    /**
+     * Sends a player free event to everyone.
+     *
+     * @param player The player who is now free.
+     */
     public void sendPlayerFree(Player player) {
-        PushMessage message = createPushMessageTemplate(LobbyMessageDataType.STATUS);
+        PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.STATUS);
         message.getData()
                 .add("name", player.getName())
                 .add("status", "free");
@@ -140,11 +164,12 @@ public class LobbyManager implements Serializable {
     }
 
     /**
+     * Creates a push message template, for message to be sent to players.
      *
-     * @param type
-     * @return
+     * @param type The lobby message type.
+     * @return The message, ready for filling with the rest of the fields.
      */
-    private PushMessage createPushMessageTemplate(LobbyMessageDataType type) {
+    private PushMessage createPushMessageTemplate(LobbyPushMessageDataType type) {
         PushMessage message = new PushMessage(MessageContext.LOBBY);
         message.getData()
                 .add("type", type.getCode());
@@ -152,8 +177,9 @@ public class LobbyManager implements Serializable {
     }
 
     /**
+     * Sends the given message to all sessions.
      *
-     * @param message
+     * @param message The message to send.
      */
     private void sendMessageToAllSessions(Message message) {
         String messageString = message.toJsonObject().toString();

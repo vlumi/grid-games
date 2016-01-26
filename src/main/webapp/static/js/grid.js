@@ -32,7 +32,7 @@
             session: {
                 name: ""
             },
-            setDefaultUrl: function () {
+            getDefaultUrlFromLocation: function () {
                 var
                         pageUrl = window.location.href,
                         parts = pageUrl.match(/^([a-z]+):\/\/(.+)(\/index\.html)?$/),
@@ -49,6 +49,24 @@
                     defaultUrl += "/";
                 }
                 defaultUrl += "game";
+                return defaultUrl;
+            },
+            setDefaultUrl: function () {
+                var defaultUrl = "";
+                $.ajax({
+                    dataType: "json",
+                    url: "config.json",
+                    async: false,
+                    success: function (data) {
+                        defaultUrl = data.server;
+                    }
+                });
+                if (typeof defaultUrl === "string" && defaultUrl !== "") {
+                    // Use configured address.
+                    $("#urlGroup").hide();
+                } else {
+                    defaultUrl = self.getDefaultUrlFromLocation();
+                }
                 $("#url").val(defaultUrl);
             },
             enableLogin: function () {
@@ -598,9 +616,6 @@
                         self.challenger = data.from;
                         $("#challengeMessageBody").text("Accept challenge from " + self.challenger + " for a game of " + data.variant + "?");
                         $("#challengeModal").modal();
-                    },
-                    rejectChallenge: function (data) {
-                        $("#gameStatus").text("Player " + data.to + " rejected the challenge!");
                     },
                     placePiece: function (data) {
                         var

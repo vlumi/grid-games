@@ -33,7 +33,10 @@ public class GameManager implements Serializable {
     @Inject
     private PlayerManager playerManager;
 
-    private final Map<Player, Game> games = Collections.synchronizedMap(new HashMap<>());
+    /**
+     * Games mapped by player.
+     */
+    private final Map<Player, Game> gamesByPlayer = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * Handle the challenge request from one player to another.
@@ -59,9 +62,9 @@ public class GameManager implements Serializable {
             Game game = new Game(variant);
             game.addPlayer(challenger);
             game.addPlayer(challengee);
-            this.games.put(challenger, game);
+            this.gamesByPlayer.put(challenger, game);
 
-            PushMessage message = createPushMessageTemplate(GameMessageDataType.CHALLENGE);
+            PushMessage message = createPushMessageTemplate(GamePushMessageDataType.CHALLENGE);
             message.getData()
                     .add("from", challenger.getName())
                     .add("to", challengee.getName())
@@ -75,8 +78,9 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Handle the accept challenge request, starting the game.
      *
-     * @param challengee
+     * @param challengee The player who was challenged and accepted.
      * @param data The data part of the request.
      * @throws fi.misaki.grid.protocol.InvalidRequestException
      */
@@ -84,21 +88,22 @@ public class GameManager implements Serializable {
             throws InvalidRequestException {
         Player challenger = playerManager.getPlayerForName(data.getString("to", ""));
 
-        synchronized (this.games) {
-            Game game = this.games.get(challenger);
+        synchronized (this.gamesByPlayer) {
+            Game game = this.gamesByPlayer.get(challenger);
             if (!game.addPlayer(challengee)) {
                 // TODO: error
                 return;
             }
-            this.games.put(challengee, game);
+            this.gamesByPlayer.put(challengee, game);
             game.start();
             sendStateToPlayers(game);
         }
     }
 
     /**
+     * Handles the reject challenge request.
      *
-     * @param challengee
+     * @param challengee The player who was challenged and rejected.
      * @param data The data part of the request.
      * @throws fi.misaki.grid.protocol.InvalidRequestException
      */
@@ -108,27 +113,27 @@ public class GameManager implements Serializable {
 
         this.playerManager.setFree(challenger, challengee);
 
-        synchronized (this.games) {
-            this.games.remove(challenger);
+        synchronized (this.gamesByPlayer) {
+            this.gamesByPlayer.remove(challenger);
         }
 
-        PushMessage message = createPushMessageTemplate(GameMessageDataType.REJECT_CHALLENGE);
-        message.getData()
-                .add("from", challenger.getName())
-                .add("to", challengee.getName());
+        PushMessage message = createPushMessageTemplate(GamePushMessageDataType.LEAVE);
+        message.getData();
 
         playerManager.sendMessage(challenger, message);
     }
 
     /**
+     * Handles the place piece request.
      *
-     * @param player
+     * @param player The player making the move
      * @param data The data part of the request.
-     * @throws fi.misaki.grid.protocol.InvalidRequestException
+     * @throws fi.misaki.grid.protocol.InvalidRequestException in case of an
+     * invalid move.
      */
     public void handlePlacePieceRequest(Player player, JsonObject data)
             throws InvalidRequestException {
-        Game game = this.games.get(player);
+        Game game = this.gamesByPlayer.get(player);
         if (game == null) {
             throw new InvalidRequestException("No game found.");
         }
@@ -151,13 +156,15 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Handles the new game request, starting the player when both players have
+     * chosen to start a new game.
      *
-     * @param player
+     * @param player The player choosing to start a new game.
      * @param data The data part of the request.
      */
     public void handleNewGame(Player player, JsonObject data) {
-        synchronized (this.games) {
-            Game game = this.games.get(player);
+        synchronized (this.gamesByPlayer) {
+            Game game = this.gamesByPlayer.get(player);
             game.start();
             if (game.isRunning()) {
                 sendStateToPlayers(game);
@@ -166,8 +173,10 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Handles the leave request, removing the player from the game and
+     * terminating it.
      *
-     * @param player
+     * @param player The player leaving from the game.
      * @param data The data part of the request.
      */
     public void handleLeaveRequest(Player player, JsonObject data) {
@@ -180,8 +189,8 @@ public class GameManager implements Serializable {
      * @param player
      */
     public void leavePlayer(Player player) {
-        synchronized (this.games) {
-            Game game = this.games.get(player);
+        synchronized (this.gamesByPlayer) {
+            Game game = this.gamesByPlayer.get(player);
             if (game == null) {
                 return;
             }
@@ -189,7 +198,7 @@ public class GameManager implements Serializable {
             PushMessage message = createLeaveMessage();
             playerManager.sendMessage(game.getPlayers(), message);
             game.leave(player);
-            this.games.remove(player);
+            this.gamesByPlayer.remove(player);
         }
     }
 
@@ -200,15 +209,16 @@ public class GameManager implements Serializable {
      * @return the found game, or null.
      */
     public Game findGame(Player player) {
-        synchronized (this.games) {
-            Game game = this.games.get(player);
+        synchronized (this.gamesByPlayer) {
+            Game game = this.gamesByPlayer.get(player);
             return game;
         }
     }
 
     /**
+     * Send the state of the game to both players.
      *
-     * @param game
+     * @param game The game whose status to send.
      */
     public void sendStateToPlayers(Game game) {
         sendState(game, game.getPlayerWhite());
@@ -216,29 +226,35 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Send the state of the game to the given player.
      *
-     * @param game
-     * @param player
+     * @param game The game whose status to send.
+     * @param player The player whom to send.
      */
-    public void sendState(Game game, Player player) {
+    private void sendState(Game game, Player player) {
         PushMessage message = createStateMessage(game, game.getSide(player));
         playerManager.sendMessage(player, message);
     }
 
     /**
+     * Send the state of the game to the given session to the given WebSocket
+     * session.
      *
-     * @param game
-     * @param session
+     * @param game The game whose status to send.
+     * @param session The WebSocket session to send the message.
+     * @throws InvalidRequestException
      */
-    public void sendStateToSession(Game game, Session session) {
+    public void sendStateToSession(Game game, Session session)
+            throws InvalidRequestException {
         Player player = this.playerManager.getPlayerForSessionId(session.getId());
         PushMessage message = createStateMessage(game, game.getSide(player));
         playerManager.sendMessage(session, message);
     }
 
     /**
+     * Sends the place piece event to both players in the game.
      *
-     * @param game
+     * @param game The associated game.
      */
     public void sendPlacePieceToPlayers(Game game) {
         PushMessage message = createPlacePieceMessage(game);
@@ -246,13 +262,14 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Sends the game over event to both players.
      *
-     * @param game
+     * @param game The associated game.
      */
     public void sendGameoverToPlayers(Game game) {
         // TODO: implement
         Player winner = game.getWinner();
-        PushMessage message = createPushMessageTemplate(GameMessageDataType.GAME_OVER);
+        PushMessage message = createPushMessageTemplate(GamePushMessageDataType.GAME_OVER);
         if (winner != null) {
             message.getData()
                     .add("winner", game.getWinner().getName())
@@ -262,13 +279,14 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Creates a state event message, to be sent to players.
      *
-     * @param game
-     * @param side
-     * @return
+     * @param game The associated game.
+     * @param side The side to whom the message will be sent.
+     * @return The message.
      */
     private PushMessage createStateMessage(Game game, GameSide side) {
-        PushMessage message = createPushMessageTemplate(GameMessageDataType.STATE);
+        PushMessage message = createPushMessageTemplate(GamePushMessageDataType.STATE);
         message.getData()
                 .add("opponent", game.getPlayer(side.getOther()).getName())
                 .add("you", side.getValue())
@@ -279,24 +297,24 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Creates a leave event message, to be sent to players.
      *
-     * @param game
-     * @param side
-     * @return
+     * @param game The associated game.
+     * @return The message.
      */
     private PushMessage createLeaveMessage() {
-        PushMessage message = createPushMessageTemplate(GameMessageDataType.LEAVE);
+        PushMessage message = createPushMessageTemplate(GamePushMessageDataType.LEAVE);
         return message;
     }
 
     /**
+     * Creates a place piece event message, to be sent to players.
      *
-     * @param game
-     * @param side
-     * @return
+     * @param game The associated game.
+     * @return The message.
      */
     private PushMessage createPlacePieceMessage(Game game) {
-        PushMessage message = createPushMessageTemplate(GameMessageDataType.PLACE_PIECE);
+        PushMessage message = createPushMessageTemplate(GamePushMessageDataType.PLACE_PIECE);
         List<GameBoardPosition> lastMoves = game.getLastMoves();
         if (lastMoves.size() > 0) {
             GameSide side = lastMoves.get(0).getSide();
@@ -319,11 +337,12 @@ public class GameManager implements Serializable {
     }
 
     /**
+     * Creates a push message template, for messages to be sent to players.
      *
-     * @param type
-     * @return
+     * @param type The game message type.
+     * @return The message, ready for filling in the rest of the fields.
      */
-    private PushMessage createPushMessageTemplate(GameMessageDataType type) {
+    private PushMessage createPushMessageTemplate(GamePushMessageDataType type) {
         PushMessage message = new PushMessage(MessageContext.GAME);
         message.getData()
                 .add("type", type.getCode());

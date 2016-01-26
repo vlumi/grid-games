@@ -8,7 +8,11 @@ import fi.misaki.grid.server.game.Game;
 import fi.misaki.grid.server.game.GameManager;
 import fi.misaki.grid.server.lobby.LobbyManager;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -25,6 +29,7 @@ import javax.json.JsonObject;
 import javax.websocket.Session;
 
 /**
+ * Logic for managing the players.
  *
  * @author vlumi
  */
@@ -41,25 +46,27 @@ public class PlayerManager implements Serializable {
     private GameManager gameManager;
 
     /**
-     *
+     * Player objects mapped by WebSocket session IDs.
      */
     private final Map<String, Player> playersBySessionId = Collections.synchronizedMap(new HashMap<>());
     /**
-     *
+     * Player objects mapped by their names.
      */
     private final Map<String, Player> playersByName = Collections.synchronizedMap(new HashMap<>());
     /**
-     *
+     * A counter for creating unique anonymous player names.
      */
     private final AtomicLong anonymousCounter = new AtomicLong(1);
 
     /**
+     * Handle the login request received from a client.
      *
-     * @param session
-     * @param data
+     * @param session The WebSocket session that sent the request.
+     * @param data The data body of the received message.
      * @throws InvalidRequestException
      */
-    public void handleLoginRequest(Session session, JsonObject data) throws InvalidRequestException {
+    public void handleLoginRequest(Session session, JsonObject data)
+            throws InvalidRequestException {
         Player player = loginPlayer(session, data);
         LOGGER.log(Level.FINE, "Player joined: {0}", player.getName());
 
@@ -79,10 +86,11 @@ public class PlayerManager implements Serializable {
     }
 
     /**
+     * Attempts to login the player with the received credentials.
      *
-     * @param request
-     * @param session
-     * @throws InvalidRequestException
+     * @param session The WebSocket session that sent the login request.
+     * @param data The data body of the received message.
+     * @throws InvalidRequestException in case the login failed.
      */
     private Player loginPlayer(Session session, JsonObject data)
             throws InvalidRequestException {
@@ -93,30 +101,32 @@ public class PlayerManager implements Serializable {
     }
 
     /**
+     * Gets the player matching the given WebSocket session ID.
      *
-     * @param sessionId
-     * @return
+     * @param sessionId The WebSocket session ID to search with.
+     * @return the matching player
+     * @throws InvalidRequestException in case player was not found.
      */
-    public Player getPlayerForSessionId(String sessionId) {
+    public Player getPlayerForSessionId(String sessionId) throws InvalidRequestException {
         Player player = this.playersBySessionId.get(sessionId);
         if (player == null) {
-            // TODO: error
-            return null;
+            throw new InvalidRequestException("Player for session was not found.");
         }
         return player;
     }
 
     /**
+     * Gets the player with the given name.
      *
-     * @param name
-     * @return
+     * @param name The name to search with.
+     * @return the matching player.
+     * @throws InvalidRequestException in case player was not found.
      */
-    public Player getPlayerForName(String name) {
+    public Player getPlayerForName(String name) throws InvalidRequestException {
         synchronized (this.playersByName) {
             Player player = this.playersByName.get(name);
             if (player == null) {
-                // TODO: error
-                return null;
+                throw new InvalidRequestException("Player for name was not found.");
             }
             return player;
         }
@@ -134,7 +144,7 @@ public class PlayerManager implements Serializable {
      * @param name Name of the player, or an empty string for anonymous.
      * @param password Hashed password for the player to allow multiple
      * connections for the player.
-     * @param session The websocket session that requested the session to be
+     * @param session The WebSocket session that requested the session to be
      * started.
      * @return The player connected to the session; may be a new or an existing
      * player.
@@ -149,16 +159,19 @@ public class PlayerManager implements Serializable {
         if (name.isEmpty()) {
             player = createAnonymousPlayer();
         } else {
+            if (name.matches(".*[^A-Za-z0-9].*")) {
+                throw new InvalidRequestException("Name may only contain alphabets and numbers.");
+            }
             synchronized (this.playersByName) {
                 player = this.playersByName.get(name);
+                String passwordHash = createPasswordHash(password);
                 if (player == null) {
                     LOGGER.log(Level.FINEST, "- New player");
                     player = new Player();
                     player.setName(name);
-                    // TODO: hash the password
-                    player.setPasswordHash(password);
+                    player.setPasswordHash(passwordHash);
                     this.playersByName.put(name, player);
-                } else if (password.isEmpty() || !player.getPasswordHash().equals(password)) {
+                } else if (password.isEmpty() || !player.getPasswordHash().equals(passwordHash)) {
                     throw new InvalidRequestException("Player name and password don't match.");
                 }
             }
@@ -171,9 +184,10 @@ public class PlayerManager implements Serializable {
     }
 
     /**
+     * Marks the players busy, propagating the status update to all players.
      *
-     * @param players
-     * @throws fi.misaki.grid.protocol.InvalidRequestException
+     * @param players The players to mark busy.
+     * @throws InvalidRequestException in case a player is already busy.
      */
     public void setBusy(Player... players)
             throws InvalidRequestException {
@@ -194,8 +208,9 @@ public class PlayerManager implements Serializable {
     }
 
     /**
+     * Marks the players free, propagating the status update to all players.
      *
-     * @param players
+     * @param players The players to mark free.
      */
     public void setFree(Player... players) {
         synchronized (this) {
@@ -319,7 +334,7 @@ public class PlayerManager implements Serializable {
     public void sendPostLoginMessage(Player player) {
         PushMessage loginMessage = new PushMessage(MessageContext.PLAYER);
         loginMessage.getData()
-                .add("type", PlayerMessageDataType.LOGIN.getCode())
+                .add("type", PlayerPushMessageDataType.LOGIN.getCode())
                 .add("name", player.getName());
         this.sendMessage(player, loginMessage);
     }
@@ -379,6 +394,7 @@ public class PlayerManager implements Serializable {
     }
 
     /**
+     * Send a message to the WebSocket session.
      *
      * @param session
      * @param messageString
@@ -388,6 +404,40 @@ public class PlayerManager implements Serializable {
         LOGGER.log(Level.FINEST, "Send message to player {0}: {1}", new String[]{player.getName(), messageString});
         LOGGER.log(Level.FINEST, " - Send to session: {0}", session.getId());
         session.getAsyncRemote().sendText(messageString);
+    }
+
+    /**
+     * Creates a password hash from the password.
+     *
+     * @param password
+     * @return
+     */
+    private static String createPasswordHash(String password) {
+        try {
+            MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+            crypt.reset();
+            crypt.update(password.getBytes("UTF-8"));
+            // TODO: salt with a secret stored on the server
+            return bytesToHex(crypt.digest());
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+            LOGGER.log(Level.SEVERE, "Error creating password digest: {0}", e);
+            return "";
+        }
+    }
+
+    /**
+     * Converts the byte array into a hexadecimal string representation.
+     *
+     * @param hash
+     * @return
+     */
+    private static String bytesToHex(final byte[] hash) {
+        try (Formatter formatter = new Formatter()) {
+            for (byte b : hash) {
+                formatter.format("%02x", b);
+            }
+            return formatter.toString();
+        }
     }
 
 }

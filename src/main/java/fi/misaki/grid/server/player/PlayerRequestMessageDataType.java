@@ -6,20 +6,16 @@ import java.util.Arrays;
  *
  * @author vlumi
  */
-public enum PlayerPushMessageDataType {
+public enum PlayerRequestMessageDataType {
     /**
-     * Player login information.
+     * Login message.
      */
     LOGIN("login"),
-    /**
-     * Login error message.
-     */
-    ERROR("error"),
     UNKNOWN("");
 
     private final String code;
 
-    private PlayerPushMessageDataType(String code) {
+    private PlayerRequestMessageDataType(String code) {
         this.code = code;
     }
 
@@ -27,8 +23,8 @@ public enum PlayerPushMessageDataType {
         return code;
     }
 
-    public static PlayerPushMessageDataType ofCode(String code) {
-        return Arrays.asList(PlayerPushMessageDataType.values())
+    public static PlayerRequestMessageDataType ofCode(String code) {
+        return Arrays.asList(PlayerRequestMessageDataType.values())
                 .stream()
                 .filter(value -> value.getCode().equals(code))
                 .findAny()

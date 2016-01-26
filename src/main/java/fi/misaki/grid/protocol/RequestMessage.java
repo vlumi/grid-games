@@ -47,6 +47,13 @@ public class RequestMessage extends Message {
         return data;
     }
 
+    /**
+     * Utility for parsing the JSON string into an object.
+     *
+     * @param data The data to parse.
+     * @return The object parsed from the JSON string.
+     * @throws InvalidRequestException
+     */
     private static JsonObject parseFromJsonString(String data)
             throws InvalidRequestException {
         try {

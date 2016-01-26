@@ -11,6 +11,7 @@ import javax.json.JsonObject;
 import javax.websocket.Session;
 
 /**
+ * Request data handler for game messages.
  *
  * @author vlumi
  */
@@ -27,17 +28,18 @@ public class GameRequestDataHandler extends RequestDataHandler {
     private PlayerManager userManager;
 
     /**
+     * Handle the request data of the received message.
      *
-     * @param session
-     * @param data
-     * @throws InvalidRequestException
+     * @param session The WebSocket session where the message was received from.
+     * @param data The data content of the received message.
+     * @throws InvalidRequestException in case of any errors
      */
     @Override
     public void handleRequestData(Session session, JsonObject data) throws InvalidRequestException {
 
         Player player = userManager.getPlayerForSessionId(session.getId());
 
-        switch (GameMessageDataType.ofCode(data.getString("type", ""))) {
+        switch (GameRequestMessageDataType.ofCode(data.getString("type", ""))) {
             case CHALLENGE:
                 gameManager.handleChallengeRequest(player, data);
                 break;
@@ -56,7 +58,6 @@ public class GameRequestDataHandler extends RequestDataHandler {
             case LEAVE:
                 gameManager.handleLeaveRequest(player, data);
                 break;
-            case GAME_OVER:
             default:
                 throw new InvalidRequestException("Invalid game request type.");
 
