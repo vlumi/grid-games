@@ -36,13 +36,21 @@
                 var
                         pageUrl = window.location.href,
                         parts = pageUrl.match(/^([a-z]+):\/\/(.+)(\/index\.html)?$/),
-                        protocol = "ws",
+                        protocol = "",
                         defaultUrl;
                 if (parts.length < 2) {
                     return;
                 }
-                if (parts[1] === "https") {
-                    protocol = "wss";
+                switch (parts[1]) {
+                    case "http":
+                        protocol = "ws";
+                        break;
+                    case "https":
+                        protocol = "wss";
+                        break;
+                    default:
+                        // Unsupported URL, maybe running off local disk?
+                        return "";
                 }
                 defaultUrl = protocol + "://" + parts[2];
                 if (/[^\/]$/.test(defaultUrl)) {
