@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.ejb.Stateless;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonObject;
 
@@ -21,7 +21,7 @@ import javax.json.JsonObject;
  *
  * @author vlumi
  */
-@Stateless
+@ApplicationScoped
 public class LobbyManager implements Serializable {
 
     private static final long serialVersionUID = 3409124989853945066L;

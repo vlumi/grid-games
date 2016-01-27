@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import javax.ejb.Stateless;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -23,7 +23,7 @@ import javax.websocket.Session;
  *
  * @author vlumi
  */
-@Stateless
+@ApplicationScoped
 public class GameManager implements Serializable {
 
     private static final long serialVersionUID = -6450837604774940779L;
@@ -90,9 +90,11 @@ public class GameManager implements Serializable {
 
         synchronized (this.gamesByPlayer) {
             Game game = this.gamesByPlayer.get(challenger);
+            if (game == null) {
+                throw new InvalidRequestException("Game for challenger " + challenger.getName() + " not found.");
+            }
             if (!game.addPlayer(challengee)) {
-                // TODO: error
-                return;
+                throw new InvalidRequestException("Adding player to game failed.");
             }
             this.gamesByPlayer.put(challengee, game);
             game.start();

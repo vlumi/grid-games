@@ -23,6 +23,11 @@ h1 {
     width: 100%;
     text-align: center;
 }
+.componentUnavailable {
+    display: none;
+    font-style: italic;
+    color: slategray;
+}
 #challengeArea {
     text-align: center;
     width: 700px;

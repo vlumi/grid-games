@@ -88,6 +88,7 @@
                         <div class="form-group">
                             <label for="opponentList"><span class="glyphicon glyphicon-user"></span> Opponent</label>
                             <select id="opponentList" class="form-control" size="1"></select>
+                            <div id="opponentListEmpty" class="componentUnavailable">No opponents available.</div>
                         </div>
                         <div class="form-group">
                             <label for="variantList"><span class="glyphicon glyphicon-knight"></span> Game variant</label>
@@ -126,7 +127,7 @@
                     <div class="modal-body">
                         <div id="gameStatus">
                         </div>
-                        <div id="gameArea">
+                        <div id="gameArea" class="noTouch">
                         </div>
                     </div>
                     <div class="modal-footer">

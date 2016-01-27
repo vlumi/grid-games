@@ -171,25 +171,6 @@
                             timestamp = hourStr + ":" + minuteStr + ":" + secondStr;
                     return timestamp;
                 },
-                updateOpponentList: function () {
-                    var
-                            $opponentList = $("#opponentList"),
-                            $memberList = $("#memberList"),
-                            selected = $("#opponentList :selected").val();
-                    $opponentList.find("option").remove();
-                    $memberList
-                            .find("option[value!=''][data-status=free]:not(:disabled)")
-                            .clone()
-                            .appendTo($opponentList);
-                    if (typeof selected === "string" && selected !== "") {
-                        $opponentList.find("option[value='" + selected + "']");
-                    }
-                    if ($opponentList.find("option").length > 0) {
-                        $("#startGameButton").prop("disabled", false);
-                    } else {
-                        $("#startGameButton").prop("disabled", true);
-                    }
-                },
                 updateMemberList: function () {
                     var
                             $memberList = $("#memberList"),
@@ -217,7 +198,7 @@
                             $element.prop("selected", true);
                         }
                     });
-                    self.ui.updateOpponentList();
+                    game.updateOpponentList();
                 },
                 sendMessage: function () {
                     var
@@ -700,7 +681,6 @@
                             .appendTo($variantList);
                 });
                 $(document)
-                        // TODO: listener to lobbymembers -- disable challenge button if none selected
                         .on("click", "#startGameButton", function (event) {
                             $("#startGameModal").modal("show");
                         })
@@ -744,6 +724,34 @@
             },
             onClose: function () {
                 self.close();
+            },
+            updateOpponentList: function () {
+                var
+                        $opponentList = $("#opponentList"),
+                        $opponentListEmpty = $("#opponentListEmpty"),
+                        $challengeButton = $("#challengeButton"),
+                        $memberList = $("#memberList"),
+                        selected = $("#opponentList :selected").val();
+
+                $opponentList.find("option").remove();
+                $memberList
+                        .find("option[value!=''][data-status=free]:not(:disabled)")
+                        .clone()
+                        .appendTo($opponentList);
+
+                if (typeof selected === "string" && selected !== "") {
+                    $opponentList.find("option[value='" + selected + "']");
+                }
+
+                if ($opponentList.find("option").length > 0) {
+                    $challengeButton.prop("disabled", false);
+                    $opponentList.show();
+                    $opponentListEmpty.hide();
+                } else {
+                    $challengeButton.prop("disabled", true);
+                    $opponentList.hide();
+                    $opponentListEmpty.show();
+                }
             }
         };
     })();
