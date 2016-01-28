@@ -500,10 +500,14 @@
             createGame: function (opponent, variant) {
                 var
                         $gameModal = $("#gameModal"),
+                        $gameVariant = $("#gameVariant"),
+                        $gameOpponent = $("#gameOpponent"),
                         $gameArea = $("#gameArea");
+
                 $gameArea.html("");
-                $("<div data-turn>")
-                        .appendTo($gameArea);
+                $gameVariant.text(variant);
+                $gameOpponent.text(opponent);
+
                 if (variant in self.boardCreator) {
                     self.boardCreator[variant]($gameArea, opponent);
                     $gameModal.modal("show");
@@ -511,18 +515,28 @@
                 }
             },
             challenge: function (challengee, variant) {
-                var message = {
+                var
+                        $gameModal = $("#gameModal"),
+                        $gameVariant = $("#gameVariant"),
+                        $gameOpponent = $("#gameOpponent"),
+                        $gameStatus = $("#gameStatus"),
+                        $gameArea = $("#gameArea"),
+                        message;
+
+                $gameStatus.text("Waiting for other player...");
+                $gameArea.html("");
+                $gameVariant.text(variant);
+                $gameOpponent.text(challengee);
+                $gameModal.modal("show");
+
+                message = {
                     type: "challenge",
                     to: challengee,
                     from: player.session.name,
                     variant: variant
                 };
                 websocket.send("game", message);
-                $("#gameStatus").text("Waiting for other player...");
-                $("#gameArea").html("");
-                $("#gameModal").modal("show");
-                // TODO: set message to lobby
-                // TODO: set status on lobby
+
             },
             acceptChallenge: function () {
                 var message = {

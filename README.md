@@ -24,7 +24,6 @@ Requirements
 Wish-list
 ---------
 
-* Better indication of current state; game over, whose turn, opponent
 * Score tracking
 * Persistence; current implementation is transient for easier deployment
 * More games; reversi, go
