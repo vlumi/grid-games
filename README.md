@@ -20,8 +20,8 @@ The server backend is Jakarta EE 8 on Java 14, and the front-end is HTML 5 with 
 ## Running instructions
 
 * Build the project: `mvn package`
-* Deploy the created `target/grid-games-1.1.war` to the application server
-  * E.g. run with Payara Micro as: `java -jar /path/to/payara-micro-5.2020.2.jar target/grid-games-1.1.war`
+* Deploy the created `target/grid-games-1.1.1.war` to the application server
+  * E.g. run with Payara Micro as: `java -jar /path/to/payara-micro-5.2020.2.jar target/grid-games-1.1.1.war`
 * Connect to the service on the browser at e.g. http://localhost:8080/grid
   * The default context path `/grid` is pre-configured for Glassfish, Payara, and JBoss
 

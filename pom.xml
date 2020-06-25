@@ -4,7 +4,7 @@
 
     <groupId>fi.misaki</groupId>
     <artifactId>grid-games</artifactId>
-    <version>1.1</version>
+    <version>1.1.1</version>
     <packaging>war</packaging>
 
     <name>grid-games</name>
