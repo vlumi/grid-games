@@ -1,4 +1,4 @@
-/target/
+target/
 nb-configuration.xml
 backup/
 *.db
@@ -7,4 +7,6 @@ backup/
 \#*
 .*.attr
 .DS_Store
-/nbproject/
+nbproject/
+.idea/
+*.iml
