@@ -6,19 +6,15 @@
 package fi.misaki.grid.server.game;
 
 import fi.misaki.grid.server.player.Player;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
 
 /**
  * A game instance, tracking and handling changes to the current state.
@@ -86,7 +82,7 @@ public class Game implements Serializable {
     /**
      * Add a player to the game. Two games must be added to the game before it
      * can be started; no more, no less.
-     *
+     * <p>
      * The first player is assigned as the white player.
      *
      * @param player The player to add.
@@ -110,7 +106,7 @@ public class Game implements Serializable {
 
     /**
      * Attempt to start the game.
-     *
+     * <p>
      * This method should be called twice (once by each player) before the game
      * actually starts.
      */
@@ -143,7 +139,7 @@ public class Game implements Serializable {
      * Attempt to place a piece on the board, by the current side.
      *
      * @param column The column of the target position.
-     * @param row The row of the target position.
+     * @param row    The row of the target position.
      * @return <code>true</code> if the move was successful.
      */
     public boolean placePiece(int column, int row) {

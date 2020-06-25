@@ -3,7 +3,6 @@ package fi.misaki.grid.server.player;
 import java.util.Arrays;
 
 /**
- *
  * @author vlumi
  */
 public enum PlayerPushMessageDataType {

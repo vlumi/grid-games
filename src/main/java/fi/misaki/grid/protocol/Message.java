@@ -1,12 +1,13 @@
 package fi.misaki.grid.protocol;
 
-import fi.misaki.grid.protocol.key.MessageKey;
 import fi.misaki.grid.protocol.key.MessageContext;
-import java.io.Serializable;
+import fi.misaki.grid.protocol.key.MessageKey;
+
 import javax.json.Json;
 import javax.json.JsonBuilderFactory;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import java.io.Serializable;
 
 /**
  * Top-level message envelope.

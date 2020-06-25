@@ -1,15 +1,16 @@
 package fi.misaki.grid.server;
 
-import fi.misaki.grid.server.player.PlayerRequestDataHandler;
 import fi.misaki.grid.protocol.InvalidRequestException;
 import fi.misaki.grid.protocol.RequestMessage;
 import fi.misaki.grid.server.game.GameRequestDataHandler;
 import fi.misaki.grid.server.lobby.LobbyRequestDataHandler;
-import java.io.Serializable;
-import java.util.logging.Logger;
+import fi.misaki.grid.server.player.PlayerRequestDataHandler;
+
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.websocket.Session;
+import java.io.Serializable;
+import java.util.logging.Logger;
 
 /**
  * Handler for the top-level message envelope, passing the handling to the

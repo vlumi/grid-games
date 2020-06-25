@@ -2,11 +2,12 @@ package fi.misaki.grid.server.player;
 
 import fi.misaki.grid.protocol.InvalidRequestException;
 import fi.misaki.grid.server.RequestDataHandler;
-import java.util.logging.Logger;
+
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.websocket.Session;
+import java.util.logging.Logger;
 
 /**
  * Request data handler for player messages.
@@ -27,7 +28,7 @@ public class PlayerRequestDataHandler extends RequestDataHandler {
      * Handle the request data of the received message.
      *
      * @param session The WebSocket session where the message was received from.
-     * @param data The data content of the received message.
+     * @param data    The data content of the received message.
      * @throws InvalidRequestException in case of any errors
      */
     @Override

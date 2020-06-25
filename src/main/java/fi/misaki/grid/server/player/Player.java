@@ -1,12 +1,12 @@
 package fi.misaki.grid.server.player;
 
+import javax.websocket.Session;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.websocket.Session;
 
 /**
  * A player entity.

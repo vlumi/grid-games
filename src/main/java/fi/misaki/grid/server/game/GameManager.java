@@ -5,18 +5,19 @@ import fi.misaki.grid.protocol.PushMessage;
 import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.server.player.Player;
 import fi.misaki.grid.server.player.PlayerManager;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.websocket.Session;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Logic for managing the games by players.
@@ -42,7 +43,7 @@ public class GameManager implements Serializable {
      * Handle the challenge request from one player to another.
      *
      * @param challenger Who made the challenge.
-     * @param data The data part of the request.
+     * @param data       The data part of the request.
      * @throws fi.misaki.grid.protocol.InvalidRequestException
      */
     public void handleChallengeRequest(Player challenger, JsonObject data)
@@ -81,7 +82,7 @@ public class GameManager implements Serializable {
      * Handle the accept challenge request, starting the game.
      *
      * @param challengee The player who was challenged and accepted.
-     * @param data The data part of the request.
+     * @param data       The data part of the request.
      * @throws fi.misaki.grid.protocol.InvalidRequestException
      */
     public void handleAcceptChallengeRequest(Player challengee, JsonObject data)
@@ -106,7 +107,7 @@ public class GameManager implements Serializable {
      * Handles the reject challenge request.
      *
      * @param challengee The player who was challenged and rejected.
-     * @param data The data part of the request.
+     * @param data       The data part of the request.
      * @throws fi.misaki.grid.protocol.InvalidRequestException
      */
     public void handleRejectChallengeRequest(Player challengee, JsonObject data)
@@ -129,9 +130,9 @@ public class GameManager implements Serializable {
      * Handles the place piece request.
      *
      * @param player The player making the move
-     * @param data The data part of the request.
+     * @param data   The data part of the request.
      * @throws fi.misaki.grid.protocol.InvalidRequestException in case of an
-     * invalid move.
+     *                                                         invalid move.
      */
     public void handlePlacePieceRequest(Player player, JsonObject data)
             throws InvalidRequestException {
@@ -162,7 +163,7 @@ public class GameManager implements Serializable {
      * chosen to start a new game.
      *
      * @param player The player choosing to start a new game.
-     * @param data The data part of the request.
+     * @param data   The data part of the request.
      */
     public void handleNewGame(Player player, JsonObject data) {
         synchronized (this.gamesByPlayer) {
@@ -179,7 +180,7 @@ public class GameManager implements Serializable {
      * terminating it.
      *
      * @param player The player leaving from the game.
-     * @param data The data part of the request.
+     * @param data   The data part of the request.
      */
     public void handleLeaveRequest(Player player, JsonObject data) {
         leavePlayer(player);
@@ -230,7 +231,7 @@ public class GameManager implements Serializable {
     /**
      * Send the state of the game to the given player.
      *
-     * @param game The game whose status to send.
+     * @param game   The game whose status to send.
      * @param player The player whom to send.
      */
     private void sendState(Game game, Player player) {
@@ -242,7 +243,7 @@ public class GameManager implements Serializable {
      * Send the state of the game to the given session to the given WebSocket
      * session.
      *
-     * @param game The game whose status to send.
+     * @param game    The game whose status to send.
      * @param session The WebSocket session to send the message.
      * @throws InvalidRequestException
      */

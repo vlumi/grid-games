@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * The game board tracking the status of each position.
- *
+ * <p>
  * Wraps the rule set of the given variant, keeping track of the game state,
  * validating moves and detecting game-ending conditions.
  *
@@ -163,7 +163,6 @@ public class GameBoard implements Serializable {
     }
 
     /**
-     *
      * @return
      */
     public List<GameBoardPosition> getWinningPositions() {
@@ -172,7 +171,7 @@ public class GameBoard implements Serializable {
 
     /**
      * Check if the game is still in a winnable state.
-     *
+     * <p>
      * The checking is done for all tiles, left-to-right and top-to-bottom.
      *
      * @return

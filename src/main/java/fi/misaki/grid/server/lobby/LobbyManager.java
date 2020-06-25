@@ -2,19 +2,20 @@ package fi.misaki.grid.server.lobby;
 
 import fi.misaki.grid.protocol.InvalidRequestException;
 import fi.misaki.grid.protocol.Message;
-import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.protocol.PushMessage;
+import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.server.player.Player;
 import fi.misaki.grid.server.player.PlayerManager;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.JsonObject;
 import java.io.Serializable;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonObject;
 
 /**
  * Logic for managing the lobby
@@ -35,7 +36,7 @@ public class LobbyManager implements Serializable {
      * Handles a chat message received from the client.
      *
      * @param player The player who the message came from.
-     * @param data The data object from the received message.
+     * @param data   The data object from the received message.
      * @throws InvalidRequestException
      */
     public void handleChatMessageRequest(Player player, JsonObject data)
@@ -98,7 +99,7 @@ public class LobbyManager implements Serializable {
     /**
      * Sends a message to all connected WebSocket sessions.
      *
-     * @param from The player who the message is from.
+     * @param from        The player who the message is from.
      * @param messageText The message text content.
      */
     public void sendChatMessageToAll(Player from, String messageText) {
@@ -114,11 +115,11 @@ public class LobbyManager implements Serializable {
     /**
      * Sends a chat message.
      *
-     * @param from Sender.
-     * @param to Recipient.
+     * @param from        Sender.
+     * @param to          Recipient.
      * @param messageText Message text content.
-     * @param isPrivate Whether the message is a private message to the
-     * recipient.
+     * @param isPrivate   Whether the message is a private message to the
+     *                    recipient.
      */
     public void sendChatMessage(Player from, Player to, String messageText, boolean isPrivate) {
         PushMessage message = createPushMessageTemplate(LobbyPushMessageDataType.CHAT_MESSAGE);

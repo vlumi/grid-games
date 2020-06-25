@@ -22,7 +22,6 @@ public class MnkGameRuleSet extends GameRuleSet {
     private final int winningLength;
 
     /**
-     *
      * @param columns
      * @param rows
      * @param winningLength
@@ -49,15 +48,15 @@ public class MnkGameRuleSet extends GameRuleSet {
 
     /**
      * Checks if the current position is within part of a winning sequence.
-     *
+     * <p>
      * If yes, returns all the positions of the winning sequence, sorted by
      * column and row.
-     *
+     * <p>
      * If now, returns an empty list.
      *
-     * @param grid The grid to check.
+     * @param grid   The grid to check.
      * @param column Column of the position to check.
-     * @param row Row of the position to check.
+     * @param row    Row of the position to check.
      * @return List of positions of the winning sequence, or an empty list if
      * not a winning sequence.
      */
@@ -187,7 +186,7 @@ public class MnkGameRuleSet extends GameRuleSet {
 
     /**
      * Check if the game is still in a winnable state.
-     *
+     * <p>
      * The checking is done for all tiles, left-to-right and top-to-bottom.
      *
      * @param grid
@@ -217,7 +216,6 @@ public class MnkGameRuleSet extends GameRuleSet {
     }
 
     /**
-     *
      * @param sideValue
      * @param column
      * @param row

@@ -3,17 +3,18 @@ package fi.misaki.grid.server;
 import fi.misaki.grid.protocol.ErrorMessage;
 import fi.misaki.grid.protocol.InvalidRequestException;
 import fi.misaki.grid.server.game.GameManager;
-import fi.misaki.grid.server.player.PlayerManager;
-import fi.misaki.grid.server.player.Player;
 import fi.misaki.grid.server.lobby.LobbyManager;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import fi.misaki.grid.server.player.Player;
+import fi.misaki.grid.server.player.PlayerManager;
+
 import javax.inject.Inject;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Main class for the game server, creating the server WebSocket end point.
@@ -46,7 +47,7 @@ public class GameServer {
 
     /**
      * Client sending a message through an open connection.
-     *
+     * <p>
      * The message handling is delegated to RequestHandler.
      *
      * @param message The raw message string sent by the client.

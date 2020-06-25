@@ -1,7 +1,8 @@
 package fi.misaki.grid.protocol;
 
-import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.protocol.key.ErrorMessageKey;
+import fi.misaki.grid.protocol.key.MessageContext;
+
 import javax.json.JsonObjectBuilder;
 
 /**

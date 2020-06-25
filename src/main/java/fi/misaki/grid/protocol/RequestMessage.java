@@ -2,10 +2,11 @@ package fi.misaki.grid.protocol;
 
 import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.protocol.key.MessageKey;
-import java.io.StringReader;
+
 import javax.json.Json;
 import javax.json.JsonException;
 import javax.json.JsonObject;
+import java.io.StringReader;
 
 /**
  * Client-originating top-level message envelope.

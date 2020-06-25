@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 /**
  * Game variant.
- *
+ * <p>
  * Each variant has a distinct rule set, which defines the size of the field and
  * has methods for determining the game-ending condition.
  *

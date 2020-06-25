@@ -7,26 +7,22 @@ import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.server.game.Game;
 import fi.misaki.grid.server.game.GameManager;
 import fi.misaki.grid.server.lobby.LobbyManager;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.websocket.Session;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Logic for managing the players.
@@ -62,7 +58,7 @@ public class PlayerManager implements Serializable {
      * Handle the login request received from a client.
      *
      * @param session The WebSocket session that sent the request.
-     * @param data The data body of the received message.
+     * @param data    The data body of the received message.
      * @throws InvalidRequestException
      */
     public void handleLoginRequest(Session session, JsonObject data)
@@ -89,7 +85,7 @@ public class PlayerManager implements Serializable {
      * Attempts to login the player with the received credentials.
      *
      * @param session The WebSocket session that sent the login request.
-     * @param data The data body of the received message.
+     * @param data    The data body of the received message.
      * @throws InvalidRequestException in case the login failed.
      */
     private Player loginPlayer(Session session, JsonObject data)
@@ -134,18 +130,18 @@ public class PlayerManager implements Serializable {
 
     /**
      * Attempt to start as session for the given player.
-     *
+     * <p>
      * If the name is not given, creates an anonymous session.
-     *
+     * <p>
      * If the name is given, and the player already exists, the password must
      * not be empty and must match the password used to create the player's
      * previous sessions.
      *
-     * @param name Name of the player, or an empty string for anonymous.
+     * @param name     Name of the player, or an empty string for anonymous.
      * @param password Hashed password for the player to allow multiple
-     * connections for the player.
-     * @param session The WebSocket session that requested the session to be
-     * started.
+     *                 connections for the player.
+     * @param session  The WebSocket session that requested the session to be
+     *                 started.
      * @return The player connected to the session; may be a new or an existing
      * player.
      * @throws InvalidRequestException In case of any errors.
@@ -241,7 +237,7 @@ public class PlayerManager implements Serializable {
 
     /**
      * Ends the session, removing all references to it.
-     *
+     * <p>
      * If it was the last session of the player, do special handling to mark the
      * player offline.
      *
@@ -342,7 +338,7 @@ public class PlayerManager implements Serializable {
     /**
      * Sends a message to a player.
      *
-     * @param player Target player.
+     * @param player  Target player.
      * @param message Message to send.
      */
     public void sendMessage(Player player, Message message) {
@@ -378,7 +374,6 @@ public class PlayerManager implements Serializable {
     }
 
     /**
-     *
      * @param player
      * @param messageString
      */

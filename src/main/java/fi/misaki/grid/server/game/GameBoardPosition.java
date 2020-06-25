@@ -34,8 +34,8 @@ public class GameBoardPosition implements Serializable {
      * Standard constructor.
      *
      * @param column The column of the position.
-     * @param row The row of the position.
-     * @param side The side occupying the position.
+     * @param row    The row of the position.
+     * @param side   The side occupying the position.
      */
     public GameBoardPosition(int column, int row, GameSide side) {
         this.column = column;
