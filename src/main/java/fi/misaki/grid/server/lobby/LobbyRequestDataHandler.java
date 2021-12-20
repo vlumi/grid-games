@@ -5,10 +5,10 @@ import fi.misaki.grid.server.RequestDataHandler;
 import fi.misaki.grid.server.player.Player;
 import fi.misaki.grid.server.player.PlayerManager;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.json.JsonObject;
-import javax.websocket.Session;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
+import jakarta.json.JsonObject;
+import jakarta.websocket.Session;
 import java.util.logging.Logger;
 
 /**

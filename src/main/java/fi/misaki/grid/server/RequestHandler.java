@@ -6,9 +6,9 @@ import fi.misaki.grid.server.game.GameRequestDataHandler;
 import fi.misaki.grid.server.lobby.LobbyRequestDataHandler;
 import fi.misaki.grid.server.player.PlayerRequestDataHandler;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.websocket.Session;
+import jakarta.ejb.Stateless;
+import jakarta.inject.Inject;
+import jakarta.websocket.Session;
 import java.io.Serializable;
 import java.util.logging.Logger;
 

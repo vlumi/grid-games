@@ -7,8 +7,8 @@ package fi.misaki.grid.server.game;
 
 import fi.misaki.grid.server.player.Player;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
+import jakarta.json.Json;
+import jakarta.json.JsonArrayBuilder;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;

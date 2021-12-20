@@ -1,6 +1,6 @@
 package fi.misaki.grid.server.player;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;

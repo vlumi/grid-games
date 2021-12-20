@@ -3,9 +3,9 @@ package fi.misaki.grid.protocol;
 import fi.misaki.grid.protocol.key.MessageContext;
 import fi.misaki.grid.protocol.key.MessageKey;
 
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonObject;
+import jakarta.json.Json;
+import jakarta.json.JsonException;
+import jakarta.json.JsonObject;
 import java.io.StringReader;
 
 /**

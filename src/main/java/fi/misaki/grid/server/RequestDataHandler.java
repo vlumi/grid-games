@@ -2,8 +2,8 @@ package fi.misaki.grid.server;
 
 import fi.misaki.grid.protocol.InvalidRequestException;
 
-import javax.json.JsonObject;
-import javax.websocket.Session;
+import jakarta.json.JsonObject;
+import jakarta.websocket.Session;
 import java.io.Serializable;
 
 /**

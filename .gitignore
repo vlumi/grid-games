@@ -10,3 +10,6 @@ backup/
 nbproject/
 .idea/
 *.iml
+.classpath
+.project
+.settings
