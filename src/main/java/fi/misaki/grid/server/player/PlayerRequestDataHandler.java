@@ -3,7 +3,7 @@ package fi.misaki.grid.server.player;
 import fi.misaki.grid.protocol.InvalidRequestException;
 import fi.misaki.grid.server.RequestDataHandler;
 
-import jakarta.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.JsonObject;
 import jakarta.websocket.Session;
@@ -14,7 +14,7 @@ import java.util.logging.Logger;
  *
  * @author vlumi
  */
-@Stateless
+@ApplicationScoped
 public class PlayerRequestDataHandler extends RequestDataHandler {
 
     private static final long serialVersionUID = 8272657796866836750L;

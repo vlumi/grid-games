@@ -6,7 +6,7 @@ import fi.misaki.grid.server.game.GameRequestDataHandler;
 import fi.misaki.grid.server.lobby.LobbyRequestDataHandler;
 import fi.misaki.grid.server.player.PlayerRequestDataHandler;
 
-import jakarta.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.websocket.Session;
 import java.io.Serializable;
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  *
  * @author vlumi
  */
-@Stateless
+@ApplicationScoped
 public class RequestHandler implements Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(RequestHandler.class.getName());
